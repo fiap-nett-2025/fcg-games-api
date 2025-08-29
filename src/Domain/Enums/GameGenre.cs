@@ -17,5 +17,6 @@ public enum GameGenre
     Sandbox,
     Survival,
     Music,
-    Educational
+    Educational,
+    Social
 }

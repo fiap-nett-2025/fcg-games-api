@@ -32,12 +32,13 @@ public class GameDbContext : DbContext
                 .HasMaxLength(500);
 
             entity.Property(e => e.Genre)
-                .HasMaxLength(500)
-                .IsRequired()
-                .HasConversion(
-                     v => string.Join(',', v), // Convert List<GameGenre> to string for storage
-                     v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(gg => Enum.Parse<GameGenre>(gg)).ToList() // Convert string back to List<GameGenre>
-                );
+            .IsRequired()
+            .HasConversion(
+                v => string.Join(",", v.Select(g => g.ToString())), // List to string
+                v => v.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                     .Select(g => (GameGenre)Enum.Parse(typeof(GameGenre), g))
+                     .ToList() // String to List
+            );
         });
     }
 }

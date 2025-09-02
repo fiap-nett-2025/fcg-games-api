@@ -24,7 +24,7 @@ jobs:
         run: dotnet build --configuration Release --no-restore
 
       - name: Testes Domain
-        run: dotnet test ./tests/Tests.Domain/FCG.Tests.Domain.csproj --configuration Release --no-build --verbosity normal
+        run: dotnet test ./tests/Tests.Domain/Tests.Domain.csproj --configuration Release --no-build --verbosity normal
 
       - name: Testes Infra
-        run: dotnet test ./tests/Tests.Infra/FCG.Tests.Infra.csproj --configuration Release --no-build --verbosity normal
+        run: dotnet test ./tests/Tests.Infra/Tests.Infra.csproj --configuration Release --no-build --verbosity normal

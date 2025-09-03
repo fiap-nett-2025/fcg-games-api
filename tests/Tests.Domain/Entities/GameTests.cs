@@ -6,7 +6,7 @@ namespace Tests.Domain.Entities;
 public class GameTests
 {
     [Fact]
-    public void Constructor_ValidParameters_CreatesGame()
+    public void CreateGame_WithValidParameters_ShouldCreateGame()
     {
         // Arrange & Act
         var game = new Game("Test Game", 0.99m, "descricao", [GameGenre.Horror]);
@@ -22,14 +22,14 @@ public class GameTests
     [InlineData(null)]
     [InlineData("")]
     [InlineData(" ")]
-    public void Constructor_InvalidTitle_Exception(string invalidTitle)
+    public void CreateGame_WithInvalidTitle_ShouldThrowException(string invalidTitle)
     {
         // Arrange, Act & Assert
         Assert.Throws<Exception>(() => new Game(invalidTitle, 0.99m, "descricao", [GameGenre.Horror]));
     }
 
     [Fact]
-    public void Constructor_InvalidPrice_CreatesGame()
+    public void CreateGame_WithInvalidPrice_ShouldCreateGame()
     {
         // Arrange, Act & Assert
         Assert.Throws<Exception>(() => new Game("Test Game", -0.99m, "descricao", [GameGenre.Horror]));
@@ -39,14 +39,14 @@ public class GameTests
     [InlineData(null)]
     [InlineData("")]
     [InlineData(" ")]
-    public void Constructor_InvalidDescription_Exception(string invalidDescription)
+    public void CreateGame_WithInvalidDescription_ShouldThrowException(string invalidDescription)
     {
         Assert.Throws<Exception>(() => new Game("Test Game", 0.99m, invalidDescription, [GameGenre.Horror]));
     }
 
     [Theory]
     [InlineData(null)]
-    public void Constructor_InvalidGenre_Exception(List<GameGenre> invalidGenre)
+    public void CreateGame_WithInvalidGenre_ShouldThrowException(List<GameGenre> invalidGenre)
     {
         Assert.Throws<Exception>(() => new Game("Test Game", 0.99m, "descricao", invalidGenre));
     }

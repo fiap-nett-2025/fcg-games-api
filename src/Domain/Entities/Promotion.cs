@@ -5,13 +5,13 @@ namespace Domain.Entities;
 public class Promotion
 {
 
-    public int Id { get; private set; }
-    public string Name { get; private set; }
-    public string Description { get; private set; }
-    public int DiscountPercentage { get; private set; }
-    public GameGenre TargetGenre { get; private set; }
-    public DateTime StartDate { get; private set; }
-    public DateTime EndDate { get; private set; }
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public string Description { get; set; }
+    public int DiscountPercentage { get; set; }
+    public GameGenre TargetGenre { get; set; }
+    public DateTime StartDate { get; set; }
+    public DateTime EndDate { get; set; }
 
     public Promotion(string name, string description, int discountPercentage, GameGenre targetGenre, DateTime startDate, DateTime endDate)
     {

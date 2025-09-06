@@ -67,6 +67,8 @@ builder.Services.AddAuthorization(options =>
 // ✅ Serviços
 builder.Services.AddScoped<IGameRepository, GameRepository>();
 builder.Services.AddScoped<IGameService, GameService>();
+builder.Services.AddScoped<IPromotionRepository, PromotionRepository>();
+builder.Services.AddScoped<IPromotionService, PromotionService>();
 builder.Services.AddSwaggerConfiguration();
 
 // ✅ Swagger

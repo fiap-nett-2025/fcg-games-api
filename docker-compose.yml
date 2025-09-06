@@ -6,13 +6,13 @@ services:
       ACCEPT_EULA: "Y"
       MSSQL_PID: "Developer"
     ports:
-      - "1433:1433"
+      - "1434:1434"
   fcg-game-api:
     build:
       context: .
       dockerfile: ./src/API/Dockerfile
     ports:
-      - "5001:8080"
+      - "5002:8080"
     depends_on:
       - sqlserver
     environment:

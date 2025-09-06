@@ -6,6 +6,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Tests.Infra.Repository;
 
+[Trait("Category", "Repository")]
+[Trait("Layer", "Infrastructure")]
+[Trait("TestType", "Unit")]
 public class GameRepositoryTests
 {
     private readonly GameDbContext _context;
@@ -22,6 +25,8 @@ public class GameRepositoryTests
     }
 
     [Fact]
+    [Trait("Operation", "CRUD")]
+    [Trait("Method", "AddAsync")]
     public async Task AddAsync_ValidGame_ShouldAddGameToDatabase()
     {
         // Arrange
@@ -37,12 +42,16 @@ public class GameRepositoryTests
     }
 
     [Fact]
+    [Trait("Operation", "CRUD")]
+    [Trait("Method", "DeleteAsync")]
+    [Trait("Scenario", "Success")]
     public async Task DeleteAsync_DeleteExistingGame_ShouldRemoveGameFromDatabase()
     {
         // Arrange
         var game = new Game("The Witcher 3", 49.99M, "RPG de Ação", [GameGenre.RPG, GameGenre.Adventure]);
         await _repository.AddAsync(game);
-        var gameToDelete = _repository.GetBy(g => g.Title == "The Witcher 3");
+        var gameToDelete = await _repository.GetBy(g => g.Title == "The Witcher 3");
+        Assert.NotNull(gameToDelete);
         _context.ChangeTracker.Clear();
 
         // Act
@@ -53,6 +62,8 @@ public class GameRepositoryTests
     }
 
     [Fact]
+    [Trait("Operation", "Query")]
+    [Trait("Method", "GetAllAsync")]
     public async Task GetAllAsync_ShouldReturnAllGames()
     {
         // Arrange
@@ -75,6 +86,8 @@ public class GameRepositoryTests
     }
 
     [Fact]
+    [Trait("Operation", "Query")]
+    [Trait("Method", "GetBy")]
     public async Task GetBy_ByTitle_ShouldReturnGame()
     {
         // Arrange
@@ -90,6 +103,8 @@ public class GameRepositoryTests
     }
 
     [Fact]
+    [Trait("Operation", "CRUD")]
+    [Trait("Method", "UpdateAsync")]
     public async Task UpdateAsync_ModifyPrice_ShouldModify()
     {
         // Arrange
@@ -98,7 +113,7 @@ public class GameRepositoryTests
         var newPrice = 59.99M;
 
         // Act
-        game.Price = newPrice;
+        game.UpdatePrice(newPrice);
         await _repository.UpdateAsync(game);
 
         // Assert

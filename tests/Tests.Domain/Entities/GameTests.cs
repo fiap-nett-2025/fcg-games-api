@@ -22,17 +22,17 @@ public class GameTests
     [InlineData(null)]
     [InlineData("")]
     [InlineData(" ")]
-    public void Constructor_InvalidTitle_Exception(string invalidTitle)
+    public void Constructor_InvalidTitle_ArgumentException(string invalidTitle)
     {
         // Arrange, Act & Assert
-        Assert.Throws<Exception>(() => new Game(invalidTitle, 0.99m, "descricao", [GameGenre.Horror]));
+        Assert.Throws<ArgumentException>(() => new Game(invalidTitle, 0.99m, "descricao", [GameGenre.Horror]));
     }
 
     [Fact]
-    public void Constructor_InvalidPrice_CreatesGame()
+    public void Constructor_InvalidPrice_ArgumentException()
     {
         // Arrange, Act & Assert
-        Assert.Throws<Exception>(() => new Game("Test Game", -0.99m, "descricao", [GameGenre.Horror]));
+        Assert.Throws<ArgumentException>(() => new Game("Test Game", -0.99m, "descricao", [GameGenre.Horror]));
     }
 
     [Theory]
@@ -41,13 +41,13 @@ public class GameTests
     [InlineData(" ")]
     public void Constructor_InvalidDescription_Exception(string invalidDescription)
     {
-        Assert.Throws<Exception>(() => new Game("Test Game", 0.99m, invalidDescription, [GameGenre.Horror]));
+        Assert.Throws<ArgumentException>(() => new Game("Test Game", 0.99m, invalidDescription, [GameGenre.Horror]));
     }
 
     [Theory]
     [InlineData(null)]
     public void Constructor_InvalidGenre_Exception(List<GameGenre> invalidGenre)
     {
-        Assert.Throws<Exception>(() => new Game("Test Game", 0.99m, "descricao", invalidGenre));
+        Assert.Throws<ArgumentException>(() => new Game("Test Game", 0.99m, "descricao", invalidGenre));
     }
 }

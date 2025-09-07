@@ -26,6 +26,14 @@ public class PromotionRepository(GameDbContext context) : IPromotionRepository
         }
     }
 
+    public async Task<IEnumerable<Promotion>> GetActivePromotionsAsync(DateTime currentDate)
+    {
+        return await _context.Promotions
+            .AsNoTracking()
+            .Where(p => p.StartDate <= currentDate && p.EndDate >= currentDate)
+            .ToListAsync();
+    }
+
     public async Task<IEnumerable<Promotion>> GetAllAsync()
     {
         return await _context.Promotions

@@ -36,7 +36,7 @@ public class GameService : IGameService
 
         var promotionalGamesDto = allGames.Select(game =>
         {
-            var finalPrice = _pricingService.CalculateFinalPrice(game, activePromotions);
+            var finalPrice = Math.Round(_pricingService.CalculateFinalPrice(game, activePromotions),2);
             return new GameDTO
             {
                 Id = (int)game.Id,

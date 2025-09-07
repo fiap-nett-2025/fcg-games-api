@@ -3,22 +3,51 @@ using Application.Exceptions;
 using Application.Interfaces;
 using Domain.Entities;
 using Domain.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace Application.Services;
 
 public class GameService : IGameService
 {
     private readonly IGameRepository _gameRepository;
+    private readonly IPromotionRepository _promotionRepository;
+    private readonly IPricingService _pricingService;
 
-    public GameService(IGameRepository gameRepository)
+    public GameService(IGameRepository gameRepository, IPromotionRepository promotionRepository, IPricingService pricingService)
     {
         _gameRepository = gameRepository;
+        _promotionRepository = promotionRepository;
+        _pricingService = pricingService;
     }
 
     public async Task<IEnumerable<GameDTO>> GetAllGamesAsync()
     {
         var games = await _gameRepository.GetAllAsync();
         return games.Select(game => MapToDto(game)).ToList();
+    }
+
+    public async Task<IEnumerable<GameDTO>> GetPromotionalGamesAsync()
+    {
+        var today = DateTime.UtcNow;
+
+        var activePromotions = await _promotionRepository.GetActivePromotionsAsync(today);
+
+        var allGames = await _gameRepository.GetAllAsync();
+
+        var promotionalGamesDto = allGames.Select(game =>
+        {
+            var finalPrice = _pricingService.CalculateFinalPrice(game, activePromotions);
+            return new GameDTO
+            {
+                Id = (int)game.Id,
+                Title = game.Title,
+                Price = finalPrice,
+                Description = game.Description,
+                Genre = game.Genre
+            };
+        });
+
+        return promotionalGamesDto;
     }
 
     public async Task<GameDTO> GetGameByIdAsync(int id)

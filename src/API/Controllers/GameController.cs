@@ -1,7 +1,11 @@
 ﻿using Application.DTOs;
 using Application.Interfaces;
+using Domain.Entities;
+using Domain.Interfaces;
+using Infra.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace API.Controllers;
 
@@ -24,6 +28,13 @@ public class GamesController : ApiBaseController
         var games = await _gameService.GetAllGamesAsync();
 
         return Success(games, "Lista de jogos retornada com sucesso.");
+    }
+
+    [HttpGet("promotions")]
+    public async Task<IActionResult> GetGamesOnPromotion()
+    {
+        var games = await _gameService.GetPromotionalGamesAsync();
+        return Success(games, "Lista de jogos em promoção retornada com sucesso.");
     }
 
     [HttpGet("{id:int}")]

@@ -104,6 +104,39 @@ public class PromotionRepositoryTests
     }
 
     [Fact]
+    [Trait("Operation", "Query")]
+    [Trait("Method", "GetActivePromotionsAsync")]
+    public async Task GetActivePromotionsAsync_ShouldReturnOnlyActivePromotions()
+    {
+        // Arrange
+        var today = new DateTime(2025, 9, 6);
+
+        _context.Promotions.RemoveRange(_context.Promotions);
+        await _context.SaveChangesAsync();
+
+        var promotions = new List<Promotion>
+    {
+        new Promotion("Summer Sale", "Expired", 10, GameGenre.Action, today.AddDays(-10), today.AddDays(-1)),
+
+        new Promotion("Spring Sale", "Active", 15, GameGenre.RPG, today.AddDays(-5), today.AddDays(5)),
+
+        new Promotion("Winter Sale", "Future", 20, GameGenre.Horror, today.AddDays(1), today.AddDays(10))
+    };
+
+        _context.Promotions.AddRange(promotions);
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _repository.GetActivePromotionsAsync(today);
+        var activePromotions = result.ToList();
+
+        // Assert
+        Assert.NotNull(activePromotions);
+        Assert.Single(activePromotions);
+        Assert.Equal("Spring Sale", activePromotions.First().Name);
+    }
+
+    [Fact]
     [Trait("Operation", "CRUD")]
     [Trait("Method", "UpdateAsync")]
     public async Task UpdateAsync_ModifyDiscountPercentage_ShouldModify()

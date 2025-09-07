@@ -1,106 +1,105 @@
 ﻿using Application.DTOs;
+using Application.Exceptions;
 using Application.Interfaces;
 using Domain.Entities;
 using Domain.Interfaces;
-using Microsoft.IdentityModel.Tokens;
+using Microsoft.EntityFrameworkCore;
 
 namespace Application.Services;
 
 public class GameService : IGameService
 {
     private readonly IGameRepository _gameRepository;
+    private readonly IPromotionRepository _promotionRepository;
+    private readonly IPricingService _pricingService;
 
-    public GameService(IGameRepository gameRepository)
+    public GameService(IGameRepository gameRepository, IPromotionRepository promotionRepository, IPricingService pricingService)
     {
         _gameRepository = gameRepository;
+        _promotionRepository = promotionRepository;
+        _pricingService = pricingService;
     }
 
     public async Task<IEnumerable<GameDTO>> GetAllGamesAsync()
     {
         var games = await _gameRepository.GetAllAsync();
+        return games.Select(game => MapToDto(game)).ToList();
+    }
 
-        var gamesDto = games.Select(game => new GameDTO
+    public async Task<IEnumerable<GameDTO>> GetPromotionalGamesAsync()
+    {
+        var today = DateTime.UtcNow;
+
+        var activePromotions = await _promotionRepository.GetActivePromotionsAsync(today);
+
+        var allGames = await _gameRepository.GetAllAsync();
+
+        var promotionalGamesDto = allGames.Select(game =>
         {
-            Id = (int)game.Id,
-            Title = game.Title ?? "",
-            Price = game.Price,
-            Description = game.Description ?? "",
-            Genre = game.Genre.ToList() ?? []
-        }).ToList();
+            var finalPrice = Math.Round(_pricingService.CalculateFinalPrice(game, activePromotions),2);
+            return new GameDTO
+            {
+                Id = (int)game.Id,
+                Title = game.Title,
+                Price = finalPrice,
+                Description = game.Description,
+                Genre = game.Genre
+            };
+        });
 
-        return gamesDto;
+        return promotionalGamesDto;
     }
 
     public async Task<GameDTO> GetGameByIdAsync(int id)
     {
         var game = await _gameRepository.GetBy(game => game.Id.Equals(id));
         if (game == null)
-            throw new Exception("Jogo não encontrado.");
+            throw new NotFoundException("Jogo não encontrado.");
 
-        return new GameDTO
-        {
-            Id = (int)game.Id,
-            Title = game.Title ?? "",
-            Price = game.Price,
-            Description = game.Description ?? "",
-            Genre = game.Genre ?? []
-        };
+        return MapToDto(game);
     }
 
     public async Task<GameDTO> CreateGameAsync(CreateGameDTO model)
     {
         var existingGame = await _gameRepository.GetBy(g => g.Title.ToUpper() == model.Title.ToUpper());
         if (existingGame is not null)
-            throw new Exception($"Jogo com o título '{model.Title}' já existe.");
+            throw new BusinessErrorDetailsException($"Jogo com o título '{model.Title}' já existe.");
 
-        var game = new Game
-        (
-            model.Title,
-            model.Price,
-            model.Description,
-            model.Genre
-        );
-
-        await _gameRepository.AddAsync(game);
-
-        return new GameDTO
+        try
         {
-            Id = (int)game.Id,
-            Title = game.Title ?? "",
-            Price = game.Price,
-            Description = game.Description ?? "",
-            Genre = game.Genre ?? []
-        };
+            var game = new Game(model.Title, model.Price, model.Description, model.Genre);
+            await _gameRepository.AddAsync(game);
+            
+            return MapToDto(game);
+        }
+        catch (ArgumentException ex)
+        {
+            throw new BusinessErrorDetailsException(ex.Message);
+        }
     }
 
     public async Task UpdateGameAsync(int id, UpdateGameDTO model)
     {
         var game = await _gameRepository.GetBy(g => g.Id.Equals(id));
+        if (game is null)
+            throw new NotFoundException($"Jogo {id} não encontrado.");
+
         var ExistingGame = await _gameRepository.GetBy(g => g.Title.ToUpper() == model.Title.ToUpper() && g.Id != id);
 
         if (ExistingGame is not null)
-            throw new Exception($"Jogo com o título '{model.Title}' já existe.");
-
-        if (game is null)
-            throw new Exception($"Jogo {id} não encontrado.");
+            throw new BusinessErrorDetailsException($"Jogo com o título '{model.Title}' já existe.");  
 
         if (!string.IsNullOrWhiteSpace(model.Title))
-            game.Title = model.Title;
+            game.UpdateTitle(model.Title);
 
         if (model.Price.HasValue)
-            game.Price = model.Price.Value;
+            game.UpdatePrice(model.Price.Value);
 
         if (!string.IsNullOrWhiteSpace(model.Description))
-            game.Description = model.Description;
+            game.UpdateDescription(model.Description);
 
-        if (!model.Genre.IsNullOrEmpty())
-            game.Genre = model.Genre;
-
-        //validations
-        Game.ValidateTitle(game.Title);
-        Game.ValidateDescription(game.Description);
-        Game.ValidateGenreList(game.Genre);
-        Game.ValidatePrice(game.Price);
+        if (model.Genre is not null && model.Genre.Count != 0)
+            game.UpdateGenre(model.Genre);
 
         await _gameRepository.UpdateAsync(game);
     }
@@ -108,10 +107,18 @@ public class GameService : IGameService
     public async Task DeleteGameAsync(int id)
     {
         var game = await _gameRepository.GetBy(g => g.Id.Equals(id));
-
         if (game is null)
-            throw new Exception($"Jogo {id} não encontrado.");
+            throw new NotFoundException($"Jogo {id} não encontrado.");
 
         await _gameRepository.DeleteAsync(id);
     }
+
+    private static GameDTO MapToDto(Game game) => new GameDTO
+    {
+        Id = (int)game.Id,
+        Title = game.Title,
+        Price = game.Price,
+        Description = game.Description,
+        Genre = game.Genre
+    };
 }

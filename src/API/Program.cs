@@ -6,7 +6,7 @@ using Domain.Interfaces;
 using Infra.Data;
 using Infra.Repository;
 using Infra.Seedings;
-
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -71,6 +71,22 @@ builder.Services.AddScoped<IGameService, GameService>();
 builder.Services.AddScoped<IPromotionRepository, PromotionRepository>();
 builder.Services.AddScoped<IPromotionService, PromotionService>();
 builder.Services.AddScoped<IPricingService, PricingService>();
+builder.Services.AddScoped<ICartRepository, CartRepository>();
+builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddHttpClient();
+
+builder.Services.AddHttpClient<IUserService, UserService>(client =>
+{
+    client.BaseAddress = new Uri("https://user-api:8080/");
+});
+
+builder.Services.AddHttpClient<IPaymentService, PaymentService>(client =>
+{
+    client.BaseAddress = new Uri("http://payment-api:8080/");
+});
+
 builder.Services.AddSwaggerConfiguration();
 
 // ✅ Swagger

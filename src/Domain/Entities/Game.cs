@@ -8,7 +8,7 @@ public class Game
     public string Title { get; private set; } = null!;
     public decimal Price { get; private set; }
     public string Description { get; private set; } = null!;
-    public List<GameGenre> Genre { get; private set; } = null!;
+    public List<GameGenre> Genre { get; private set; } = new List<GameGenre>();
 
     public Game(string title, decimal price, string description, List<GameGenre> genre)
     {

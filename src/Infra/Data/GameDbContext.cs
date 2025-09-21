@@ -1,6 +1,7 @@
 ﻿using Domain.Entities;
 using Domain.Enums;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace Infra.Data;
 
@@ -8,6 +9,7 @@ public class GameDbContext : DbContext
 {
     public DbSet<Game> Games { get; set; }
     public DbSet<Promotion> Promotions { get; set; }
+    public DbSet<Cart> Carts { get; set; }
     public GameDbContext(DbContextOptions<GameDbContext> options) : base(options) { }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -38,7 +40,12 @@ public class GameDbContext : DbContext
                 v => string.Join(",", v.Select(g => g.ToString())), // List to string
                 v => v.Split(',', StringSplitOptions.RemoveEmptyEntries)
                      .Select(g => (GameGenre)Enum.Parse(typeof(GameGenre), g))
-                     .ToList() // String to List
+                     .ToList(), // String to List
+                new ValueComparer<List<GameGenre>>(
+                    (c1, c2) => c1.SequenceEqual(c2),
+                    c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                    c => c.ToList()
+                )
             );
         });
 
@@ -63,6 +70,29 @@ public class GameDbContext : DbContext
                 .IsRequired();
             entity.Property(e => e.EndDate)
                 .IsRequired();
+        });
+
+        modelBuilder.Entity<Cart>(entity =>
+        {
+            entity.ToTable("carts");
+            entity.HasKey(e => e.UserId);
+            entity.Property(e =>e.UserId)
+                .IsRequired()
+                .ValueGeneratedNever();
+            entity.Property(e => e.GameIds)
+                .IsRequired()
+                .HasConversion(
+                     v => string.Join(",", v),
+                     v => v.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                        .Select(int.Parse)
+                        .ToList(),
+                     new ValueComparer<List<int>>(
+                         (c1, c2) => c1.SequenceEqual(c2),
+                         c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                         c => c.ToList()
+                     )
+                )
+                .HasColumnType("nvarchar(1000)");
         });
     }
 }

@@ -4,11 +4,12 @@ namespace Domain.Entities;
 
 public class Game
 {
-    public int Id { get; private set; }
-    public string Title { get; private set; } = null!;
-    public decimal Price { get; private set; }
-    public string Description { get; private set; } = null!;
-    public List<GameGenre> Genre { get; private set; } = new List<GameGenre>();
+    public int Id { get;  set; }
+    public string Title { get;  set; } = null!;
+    public decimal Price { get;  set; }
+    public string Description { get;  set; } = null!;
+    public List<GameGenre> Genre { get;  set; } = new List<GameGenre>();
+    public DateTime CreatedAt { get; set; }
 
     public Game(string title, decimal price, string description, List<GameGenre> genre)
     {
@@ -22,7 +23,7 @@ public class Game
         Description = description;
         Genre = genre;
     }
-    private Game() { } // For EF Core
+    public Game() { } // For EF Core
 
     public static void ValidateTitle(string? title)
     {

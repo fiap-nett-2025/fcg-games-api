@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 namespace API.Controllers;
 
 [Route("api/[controller]")]
+[ApiExplorerSettings(IgnoreApi = true)]
 [ApiController]
 [Authorize]
 public class GamesController : ApiBaseController

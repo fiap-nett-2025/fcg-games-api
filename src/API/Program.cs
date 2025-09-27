@@ -68,6 +68,12 @@ builder.Services.AddAuthorization(options =>
 // ✅ Serviços
 builder.Services.AddScoped<IGameRepository, GameRepository>();
 builder.Services.AddScoped<IGameService, GameService>();
+
+builder.Services.AddElasticsearch(builder.Configuration);
+builder.Services.AddAutoMapperConfiguration();
+builder.Services.AddScoped<IGameElasticSearchService, GameElasticSearchService>();
+builder.Services.AddSingleton(builder.Configuration);
+
 builder.Services.AddScoped<IPromotionRepository, PromotionRepository>();
 builder.Services.AddScoped<IPromotionService, PromotionService>();
 builder.Services.AddScoped<IPricingService, PricingService>();

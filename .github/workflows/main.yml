@@ -32,10 +32,10 @@ jobs:
         run: dotnet build --configuration Release --no-restore
 
       - name: Domain Tests
-        run: dotnet test ./FCG.Tests.Domain/FCG.Tests.Domain.csproj --configuration Release --no-build --verbosity normal
+        run: dotnet test ./FCG.Tests.Domain/FCG.Game.Tests.Domain.csproj --configuration Release --no-build --verbosity normal
 
       - name: Infra Tests
-        run: dotnet test ./FCG.Tests.Infra/FCG.Tests.Infra.csproj --configuration Release --no-build --verbosity normal
+        run: dotnet test ./FCG.Tests.Infra/FCG.Game.Tests.Infra.csproj --configuration Release --no-build --verbosity normal
 
   
   build-and-deploy:

@@ -59,7 +59,7 @@ jobs:
         with:
           registry: ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io
           username: ${{ secrets.FCGGAMEAPI_REGISTRY_USERNAME }}
-          password: ${{ secrets.FCGUSERAPI_REGISTRY_PASSWORD }}
+          password: ${{ secrets.FCGGAMEAPI_REGISTRY_PASSWORD }}
 
       - name: Build and push container image to ACR
         uses: docker/build-push-action@v6

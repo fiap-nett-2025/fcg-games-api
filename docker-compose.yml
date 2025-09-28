@@ -1,27 +1,28 @@
 services:
-  # sqlserver:
-  #   image: mcr.microsoft.com/mssql/server:2022-latest
-  #   environment:
-  #     SA_PASSWORD: "FCG@admin"
-  #     ACCEPT_EULA: "Y"
-  #     MSSQL_PID: "Developer"
-  #   ports:
-  #     - "1433:1433"
-  #   networks:
-  #     - fcg-network
-  fcg-game-api:
-    build:
-      context: .
-      dockerfile: ./src/API/Dockerfile
-    ports:
-      - "5002:8080"
-    #depends_on:
-    #  - sqlserver
-    environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      ConnectionStrings__DefaultConnection: "Server=sqlserver;Initial Catalog=FCG_game;User Id=sa;Password=FCG@admin;TrustServerCertificate=true"
-    networks:
-      - fcg-network
+    sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        environment:
+            SA_PASSWORD: "FCG@admin"
+            ACCEPT_EULA: "Y"
+            MSSQL_PID: "Developer"
+        ports:
+            - "1433:1433"
+        networks:
+            - fcg-network
+
+    fcg-game-api:
+        build:
+            context: .
+            dockerfile: ./src/FCG.Game.API/Dockerfile
+        ports:
+            - "5002:8080"
+        depends_on:
+            - sqlserver
+        environment:
+            ASPNETCORE_ENVIRONMENT: Development
+            ConnectionStrings__DefaultConnection: "Server=sqlserver;Initial Catalog=FCG_game;User Id=sa;Password=FCG@admin;TrustServerCertificate=true"
+        networks:
+            - fcg-network
 networks:
   fcg-network:
     external: true

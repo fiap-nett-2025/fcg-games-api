@@ -32,11 +32,7 @@ jobs:
         run: dotnet build --configuration Release --no-restore
 
       - name: Domain Tests
-        run: dotnet test ./FCG.Tests.Domain/FCG.Tests.Domain.csproj --configuration Release --no-build --verbosity normal
-
-      - name: Infra Tests
-        run: dotnet test ./FCG.Tests.Infra/FCG.Tests.Infra.csproj --configuration Release --no-build --verbosity normal
-
+        run: dotnet test ./FCG.Game.Tests.Domain/FCG.Game.Tests.Domain.csproj --configuration Release --no-build --verbosity normal
   
   build-and-deploy:
     name: Deploy to Production
@@ -70,7 +66,7 @@ jobs:
         with:
           push: true
           tags: ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_APP_NAME }}:${{ github.sha }}
-          file: FCG.API/Dockerfile
+          file: FCG.Game.API/Dockerfile
 
       - name: Azure Login
         uses: azure/login@v2

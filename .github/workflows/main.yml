@@ -32,7 +32,7 @@ jobs:
         run: dotnet build --configuration Release --no-restore
 
       - name: Domain Tests
-        run: dotnet test ./FCG.Game.Tests.Domain/FCG.Game.Tests.Domain.csproj --configuration Release --no-build --verbosity normal
+        run: dotnet test ./tests/FCG.Game.Tests.Domain/FCG.Game.Tests.Domain.csproj --configuration Release --no-build --verbosity normal
   
   build-and-deploy:
     name: Deploy to Production

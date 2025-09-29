@@ -1,9 +1,11 @@
 ﻿using AutoMapper;
+using Azure;
 using Elastic.Clients.Elasticsearch;
 using Elastic.Clients.Elasticsearch.QueryDsl;
 using FCG.Game.Application.DTOs;
 using FCG.Game.Application.Exceptions;
 using FCG.Game.Application.Interfaces;
+using FCG.Game.Domain.Entities;
 
 namespace FCG.Game.Application.Services
 {
@@ -19,7 +21,17 @@ namespace FCG.Game.Application.Services
             Domain.Entities.Game.ValidateGenreList(dto.Genre);
             var game = mapper.Map<Domain.Entities.Game>(dto);
 
-            var response = await UpsertAsync(game, OpType.Create);
+            var response = await client.IndexAsync(game, i => i
+                    .Index(GAME_ELASTIC_SEARCH_INDEX)
+                    .Id(game.Id)
+                    .OpType(OpType.Create));
+
+            if (!response.IsValidResponse)
+            {
+                var errorMessage = response.ElasticsearchServerError?.ToString() ?? response.DebugInformation;
+                throw new InvalidOperationException($"Falha ao indexar jogo em '{GAME_ELASTIC_SEARCH_INDEX}': {errorMessage}");
+            }
+            
             return new GameDTO()
             {
                 Id = response.Id,
@@ -31,32 +43,7 @@ namespace FCG.Game.Application.Services
             };
         }
 
-        public async Task<GameDTO> PartialUpdateAsync(string gameId, PartialUpdateGameDTO dto)
-        {
-            var game = await GetGameByIdAsync(gameId);
-
-            game.Title = dto.Title ?? game.Title;
-            game.Price = dto.Price ?? game.Price;
-            game.Description = dto.Description ?? game.Description;
-            game.Genre = dto.Genre ?? game.Genre;
-
-            Domain.Entities.Game.ValidateTitle(game.Title);
-            Domain.Entities.Game.ValidatePrice(game.Price);
-            Domain.Entities.Game.ValidateDescription(game.Description);
-            Domain.Entities.Game.ValidateGenreList(game.Genre);
-
-            var response = await UpsertAsync(game, OpType.Index);
-            return new GameDTO()
-            {
-                Id = response.Id,
-                Description = game.Description,
-                Genre = game.Genre,
-                Price = game.Price,
-                Title = game.Title,
-                Popularity = game.Popularity
-            };
-        }
-
+      
         public async Task<GameDTO> GetByIdAsync(string id)
         {
             var game = await GetGameByIdAsync(id);
@@ -104,12 +91,21 @@ namespace FCG.Game.Application.Services
             return response.Deleted.GetValueOrDefault() > 0;
         }
 
-        public async Task<GameDTO> IncreasePopularity(string gameId)
+        public async Task<GameDTO> PartialUpdateAsync(string gameId, PartialUpdateGameDTO dto)
         {
             var game = await GetGameByIdAsync(gameId);
-            game.Popularity++;
 
-            var response = await UpsertAsync(game, OpType.Index);
+            game.Title = dto.Title ?? game.Title;
+            game.Price = dto.Price ?? game.Price;
+            game.Description = dto.Description ?? game.Description;
+            game.Genre = dto.Genre ?? game.Genre;
+
+            Domain.Entities.Game.ValidateTitle(game.Title);
+            Domain.Entities.Game.ValidatePrice(game.Price);
+            Domain.Entities.Game.ValidateDescription(game.Description);
+            Domain.Entities.Game.ValidateGenreList(game.Genre);
+
+            var response = await UpdateData(gameId, game, OpType.Index);
             return new GameDTO()
             {
                 Id = response.Id,
@@ -121,13 +117,30 @@ namespace FCG.Game.Application.Services
             };
         }
 
-        private async Task<IndexResponse> UpsertAsync(Domain.Entities.Game game, OpType operation)
+        public async Task<GameDTO> IncreasePopularity(string gameId)
+        {
+            var game = await GetGameByIdAsync(gameId);
+            game.Popularity++;
+
+            var response = await UpdateData(gameId, game, OpType.Index);
+
+            return new GameDTO()
+            {
+                Id = response.Id,
+                Description = game.Description,
+                Genre = game.Genre,
+                Price = game.Price,
+                Title = game.Title,
+                Popularity = game.Popularity
+            };
+        }
+
+        private async Task<IndexResponse> UpdateData( string gameId, Domain.Entities.Game game, OpType operation)
         {
             var response = await client.IndexAsync(game, i => i
-                .Index(GAME_ELASTIC_SEARCH_INDEX)
-                .Id(game.Id)
-                .OpType(operation)
-            );
+                    .Index(GAME_ELASTIC_SEARCH_INDEX)
+                    .Id(gameId)
+                    .OpType(operation));
 
             if (!response.IsValidResponse)
             {

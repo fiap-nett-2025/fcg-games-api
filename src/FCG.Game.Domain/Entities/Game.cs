@@ -4,7 +4,7 @@ namespace FCG.Game.Domain.Entities;
 
 public class Game
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
+    public string Id { get; set; } 
     public string Title { get;  set; } = null!;
     public decimal Price { get;  set; }
     public string Description { get;  set; } = null!;

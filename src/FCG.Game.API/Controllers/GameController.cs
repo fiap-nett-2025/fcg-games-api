@@ -16,6 +16,13 @@ namespace FCG.Game.API.Controllers
             return Success(game, "Jogo encontrado.");
         }
 
+        [HttpPatch("Popularity/{id}")]
+        public async Task<IActionResult> IncreasePopularity([FromRoute] string id)
+        {
+            var game = await gameService.IncreasePopularity(id);
+            return Success(game, "Popularidade atualizada com sucesso.");
+        }
+
         [HttpPost]
         public async Task<IActionResult> InsertGame([FromBody] CreateGameDTO dto)
         {

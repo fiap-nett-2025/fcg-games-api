@@ -43,7 +43,51 @@ namespace FCG.Game.Application.Services
             };
         }
 
-      
+        public async Task<IEnumerable<GameDTO>> GetGamesPaginated(int page, int size)
+        {
+            var response = await client.SearchAsync<Domain.Entities.Game>(s => s
+                .Indices(GAME_ELASTIC_SEARCH_INDEX)
+                .From((page - 1) * size)
+                .Size(size)
+            );
+
+            var games = response.Hits.Select(game => new GameDTO
+            {
+                Id = game.Id,
+                Title = game.Source.Title,
+                Description = game.Source.Description,
+                Genre = game.Source.Genre,
+                Price = game.Source.Price,
+                Popularity = game.Source.Popularity
+            });
+
+            return games;
+        }
+
+        public async Task<IEnumerable<GameDTO>> GetMostPopularGamesPaginated(int page, int size)
+        {
+            var response = await client.SearchAsync<Domain.Entities.Game>(s => s
+                .Indices(GAME_ELASTIC_SEARCH_INDEX)
+                .From((page - 1) * size)
+                .Size(size)
+                .Sort(sort => sort
+                    .Field(g => g.Popularity, SortOrder.Desc)
+                )
+            );
+
+            var games = response.Hits.Select(game => new GameDTO
+            {
+                Id = game.Id,
+                Title = game.Source.Title,
+                Description = game.Source.Description,
+                Genre = game.Source.Genre,
+                Price = game.Source.Price,
+                Popularity = game.Source.Popularity
+            });
+
+            return games;
+        }
+
         public async Task<GameDTO> GetByIdAsync(string id)
         {
             var game = await GetGameByIdAsync(id);

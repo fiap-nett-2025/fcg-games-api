@@ -38,11 +38,11 @@ namespace FCG.Game.API.Controllers
             return Success(game, "Jogo encontrado.");
         }
 
-        [HttpPatch("Popularity/{id}")]
-        public async Task<IActionResult> IncreasePopularity([FromRoute] string id)
+        [HttpPatch("Popularity")]
+        public async Task<IActionResult> IncreasePopularity([FromBody] List<string> ids)
         {
-            var game = await gameService.IncreasePopularity(id);
-            return Success(game, "Popularidade atualizada com sucesso.");
+            var games = await gameService.IncreasePopularity(ids);
+            return Success(games, "Popularidade atualizada com sucesso.");
         }
 
         [HttpPost]

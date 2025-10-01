@@ -161,24 +161,31 @@ namespace FCG.Game.Application.Services
             };
         }
 
-        public async Task<GameDTO> IncreasePopularity(string gameId)
+        public async Task<IEnumerable<GameDTO>> IncreasePopularity(IEnumerable<string> gameIds)
         {
-            var game = await GetGameByIdAsync(gameId);
-            game.Popularity++;
+            var updatedGames = new List<GameDTO>();
 
-            var response = await UpdateData(gameId, game, OpType.Index);
-
-            return new GameDTO()
+            foreach (var gameId in gameIds)
             {
-                Id = response.Id,
-                Description = game.Description,
-                Genre = game.Genre,
-                Price = game.Price,
-                Title = game.Title,
-                Popularity = game.Popularity
-            };
-        }
+                var game = await GetGameByIdAsync(gameId);
+                game.Popularity++;
 
+                var response = await UpdateData(gameId, game, OpType.Index);
+
+                updatedGames.Add(new GameDTO
+                {
+                    Id = response.Id,
+                    Description = game.Description,
+                    Genre = game.Genre,
+                    Price = game.Price,
+                    Title = game.Title,
+                    Popularity = game.Popularity
+                });
+            }
+
+            return updatedGames;
+        }
+        
         private async Task<IndexResponse> UpdateData( string gameId, Domain.Entities.Game game, OpType operation)
         {
             var response = await client.IndexAsync(game, i => i

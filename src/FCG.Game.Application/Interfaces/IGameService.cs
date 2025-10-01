@@ -11,6 +11,6 @@ namespace FCG.Game.Application.Interfaces
         Task<GameDTO> GetByIdAsync(string id);
         Task<bool> DeleteAllAsync();
         Task<bool> DeleteByIdAsync(string id);
-        Task<GameDTO> IncreasePopularity(string gameId);
+        Task<IEnumerable<GameDTO>> IncreasePopularity(IEnumerable<string> gameIds);
     }
 }

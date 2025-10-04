@@ -1,5 +1,6 @@
 ﻿using FCG.Game.Application.Wrappers;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace FCG.Game.API.Controllers
 {
@@ -34,6 +35,23 @@ namespace FCG.Game.API.Controllers
         {
             var response = ResponseWrapper<List<string>>.ValidationFailResponse(errors);
             return StatusCode(400, response);
+        }
+
+        protected Guid GetUserId()
+        {
+            string userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
+                ?? throw new UnauthorizedAccessException("Usuário não autenticado");
+            return Guid.Parse(userId);
+        }
+
+        protected string GetJwtToken()
+        {
+            var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
+
+            if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
+                throw new UnauthorizedAccessException("Token JWT não encontrado");
+
+            return authHeader.Replace("Bearer ", "");
         }
     }
 }

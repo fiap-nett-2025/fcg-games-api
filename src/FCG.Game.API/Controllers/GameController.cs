@@ -31,6 +31,21 @@ namespace FCG.Game.API.Controllers
             return Success(games);
         }
 
+        [HttpGet("Recommended/{page}/{size}")]
+        public async Task<IActionResult> GetRecommendedGames([FromRoute] int page, [FromRoute] int size)
+        {
+            if (page < 1)
+            {
+                return BadRequest("O número da página deve ser maior que 0.");
+            }
+
+            var userId = GetUserId();
+            var jwt = GetJwtToken();
+
+            var games = await gameService.GetRecommendedGamesPaginated(page, size, userId, jwt);
+            return Success(games);
+        }
+
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById([FromRoute] string id)
         {

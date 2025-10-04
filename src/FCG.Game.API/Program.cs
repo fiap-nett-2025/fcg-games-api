@@ -81,7 +81,7 @@ builder.Services.AddHttpClient();
 
 builder.Services.AddHttpClient<IUserService, UserService>(client =>
 {
-    client.BaseAddress = new Uri("https://user-api:8080/");
+    client.BaseAddress = new Uri("https://fcg-user-api.whitesea-88353420.westus2.azurecontainerapps.io/");
 });
 
 builder.Services.AddSwaggerConfiguration();

@@ -6,6 +6,8 @@ using FCG.Game.Application.DTOs;
 using FCG.Game.Application.Exceptions;
 using FCG.Game.Application.Interfaces;
 using FCG.Game.Domain.Entities;
+using Newtonsoft.Json.Linq;
+using System.Text.Json;
 
 namespace FCG.Game.Application.Services
 {
@@ -206,6 +208,102 @@ namespace FCG.Game.Application.Services
             var response = await client.GetAsync<Domain.Entities.Game>(id, g => g.Index(GAME_ELASTIC_SEARCH_INDEX));
             return (response?.Source)
                 ?? throw new NotFoundException("Jogo não encontrado.");
+        }
+
+
+        public async Task<IEnumerable<GameDTO>> GetRecommendedGamesPaginated(int page, int size, Guid userId, string jwt)
+        {
+            using var httpClient = new HttpClient
+            {
+                BaseAddress = new Uri("http://localhost:5001/")
+            };
+
+            httpClient.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwt);
+
+            var libraryResponse = await httpClient.GetAsync($"api/UserGameLibrary/{userId}");
+
+            if (!libraryResponse.IsSuccessStatusCode)
+                throw new Exception("Não foi possível buscar a biblioteca do usuário");
+
+            var json = await libraryResponse.Content.ReadAsStringAsync();
+
+            // Parse genérico sem DTO
+            using var doc = JsonDocument.Parse(json);
+
+            var root = doc.RootElement;
+
+            // navegar até "data" e extrair todos os "gameId"
+            var gameIds = root
+                .GetProperty("data")
+                .EnumerateArray()
+                .Select(x => x.GetProperty("gameId").GetString()!)
+                .ToList();
+
+            //pegando os generos  dos jogos q o usuario tem em sua biblioteca
+            var allGenres = new List<string>();
+
+            foreach (var gameId in gameIds) {
+                var response = await client.GetAsync<Domain.Entities.Game>(gameId, g =>
+                    g.Index(GAME_ELASTIC_SEARCH_INDEX));
+
+                if (response.Found && response.Source?.Genre is not null)
+                {
+                    allGenres.AddRange(response.Source.Genre.Select(g => g.ToString()));
+                }
+            }
+
+            //pega o genero mais frequente
+            var modeGenre = allGenres
+                .GroupBy(g => g)
+                .OrderByDescending(g => g.Count())
+                .ThenBy(g => g.Key)          // desempate estável
+                .Select(g => g.Key)
+                .FirstOrDefault();
+
+            //fazer mensagem caso usuario n tenha nada na biblioteca, logo n tem nada para recomentar
+
+            // 2) exclui jogos já possuídos (caso você tenha _ids do ES)
+            var ownedIdsArray = gameIds?.ToArray() ?? Array.Empty<string>();
+
+            /*var resp = await client.SearchAsync<Domain.Entities.Game>(s => s
+                .Index(GAME_ELASTIC_SEARCH_INDEX)
+                .From((page - 1) * size)
+                .Size(size)
+                .Query(q => q.Bool(b => b
+                    .Must(m => m.Term(t => t
+                        .Field(f => f.Genre)          // se o campo for analisado, use .Field("genre.keyword")
+                        .Value(modeGenre)))           // um único valor
+                    //.MustNot(mn => mn.Ids(i => i.Values(ownedIdsArray)))
+                ))
+                //.Sort(s => s.Field(f => f.Popularity, SortOrder.Desc)) // ordena por popularidade (desc)
+            );*/
+            
+
+            var resp = await client.SearchAsync<Domain.Entities.Game>(s => s
+                .Indices(GAME_ELASTIC_SEARCH_INDEX)
+                .Size(10)
+                .Query(q => q.Term(t => t
+                    .Field("genre.keyword")     
+                    .Value(modeGenre)
+                    .CaseInsensitive(true)      // considerar maiusculas e minusculas
+                ))
+                
+             );
+
+
+            if (!resp.IsValidResponse)
+                throw new Exception($"Falha ES: {resp.ElasticsearchServerError}");
+
+            return resp.Hits.Select(game => new GameDTO
+            {
+                Id = game.Id,
+                Title = game.Source.Title,
+                Description = game.Source.Description,
+                Genre = game.Source.Genre,
+                Price = game.Source.Price,
+                Popularity = game.Source.Popularity
+            }).ToArray();
         }
     }
 }

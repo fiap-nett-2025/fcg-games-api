@@ -9,6 +9,10 @@ Fiap Cloud Games (FCG) é uma plataforma inovadora de jogos na nuvem desenvolvid
 ## 🎮 Sobre o Serviço de Jogos
 
 O serviço de jogos é responsável por gerenciar o catálogo de jogos e promoções disponíveis na plataforma FCG. Ele oferece funcionalidades para criar, ler, atualizar e deletar informações sobre os jogos e as promoções.
+
+### <img align="center" height="30" width="40" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/elasticsearch/elasticsearch-original.svg"> Elastic Search
+
+Os dados dos jogos são armazenados no Elastic Cloud. A classe que cuida da conexão é "FCG.Game.API.Configurations" e a classe que faz as logicas de consultas é "FCG.Game.Application.Services"
       
 ## ⚙️ Tecnologias e Plataformas utilizadas
 
@@ -19,7 +23,8 @@ O serviço de jogos é responsável por gerenciar o catálogo de jogos e promoç
 - [XUnit](https://xunit.net/)
 - [Swagger](https://swagger.io/)
 - [Docker](https://www.docker.com/)
-
+- Elastic Cloud | Elastic Search
+  
 ## 🛠️ Como Executar
 
 ### Usando Docker

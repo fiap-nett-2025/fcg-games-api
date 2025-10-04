@@ -13,6 +13,12 @@ O serviço de jogos é responsável por gerenciar o catálogo de jogos e promoç
 ### <img align="center" height="30" width="40" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/elasticsearch/elasticsearch-original.svg"> Elastic Search
 
 Os dados dos jogos são armazenados no Elastic Cloud. A classe que cuida da conexão é "FCG.Game.API/Configurations/ElasticSearchConfig.cs" e a classe que faz as logicas de consultas é "FCG.Game.Application/Services/GameServices.cs"
+
+### Comunicação com a api de usuarios
+
+Para usar a API de Games é necessário fazer autenticação via token JWT obtido pelo metodo de login da api de Usuários, após isso no arquivo "FCG.Game.API/Controllers/ApiBaseController.cs" extraimos o Id e o Token do usuário. Esses dados são usados para logar-se na Api de usuarios depois para então recuperar os itens da biblioteca de jogos do usuário.
+
+A partir desses dados nós pesquisamos no <b>Elastic Cloud</b> quais são os generos desses jogos que o usuário possui, então pegamos o genero mais frequente e retornamos para o usuario outros jogos do mesmo genero no metodo de recomendações.
       
 ## ⚙️ Tecnologias e Plataformas utilizadas
 

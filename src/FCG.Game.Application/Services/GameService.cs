@@ -238,7 +238,7 @@ namespace FCG.Game.Application.Services
                 .GetProperty("data")
                 .EnumerateArray()
                 .Select(x => x.GetProperty("gameId").GetString()!)
-                .ToList();
+                .ToArray();
 
             //pegando os generos  dos jogos q o usuario tem em sua biblioteca
             var allGenres = new List<string>();
@@ -263,37 +263,26 @@ namespace FCG.Game.Application.Services
 
             //fazer mensagem caso usuario n tenha nada na biblioteca, logo n tem nada para recomentar
 
-            // 2) exclui jogos já possuídos (caso você tenha _ids do ES)
-            var ownedIdsArray = gameIds?.ToArray() ?? Array.Empty<string>();
-
-            /*var resp = await client.SearchAsync<Domain.Entities.Game>(s => s
-                .Index(GAME_ELASTIC_SEARCH_INDEX)
-                .From((page - 1) * size)
-                .Size(size)
-                .Query(q => q.Bool(b => b
-                    .Must(m => m.Term(t => t
-                        .Field(f => f.Genre)          // se o campo for analisado, use .Field("genre.keyword")
-                        .Value(modeGenre)))           // um único valor
-                    //.MustNot(mn => mn.Ids(i => i.Values(ownedIdsArray)))
-                ))
-                //.Sort(s => s.Field(f => f.Popularity, SortOrder.Desc)) // ordena por popularidade (desc)
-            );*/
             
-
+            // Pesquisa no Elastic os jogos do genero mais frequente, desconsiderando os jogos que o usuario ja tem
+            //e ordenando por popularidade
             var resp = await client.SearchAsync<Domain.Entities.Game>(s => s
                 .Indices(GAME_ELASTIC_SEARCH_INDEX)
                 .Size(10)
-                .Query(q => q.Term(t => t
-                    .Field("genre.keyword")     
-                    .Value(modeGenre)
-                    .CaseInsensitive(true)      // considerar maiusculas e minusculas
+                .Query(q => q.Bool(b => b
+                    .Must(m => m.Term(t => t
+                        .Field("genre.keyword")
+                        .Value(modeGenre)
+                        .CaseInsensitive(true)
+                    ))
+                    .MustNot(mn => mn.Ids(i => i
+                        .Values(gameIds)           
+                    ))
                 ))
-                
-             );
-
+            );
 
             if (!resp.IsValidResponse)
-                throw new Exception($"Falha ES: {resp.ElasticsearchServerError}");
+                throw new BusinessErrorDetailsException("response inválido");
 
             return resp.Hits.Select(game => new GameDTO
             {

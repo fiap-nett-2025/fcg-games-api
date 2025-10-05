@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Elastic.Clients.Elasticsearch;
+using Elastic.Clients.Elasticsearch.MachineLearning;
 using Elastic.Clients.Elasticsearch.QueryDsl;
 using FCG.Game.Application.DTOs;
 using FCG.Game.Application.Exceptions;
@@ -156,7 +157,7 @@ namespace FCG.Game.Application.Services
             Domain.Entities.Game.ValidateDescription(game.Description);
             Domain.Entities.Game.ValidateGenreList(game.Genre);
 
-            var exists = await ValidateIfTitleIsAlreadyTaken(game.Title);
+            var exists = await ValidateIfTitleIsAlreadyTaken(game.Title, gameId);
             if (exists)
             {
                 throw new InvalidOperationException($"Já existe um jogo com o título '{game.Title}'.");
@@ -221,19 +222,22 @@ namespace FCG.Game.Application.Services
                 ?? throw new NotFoundException("Jogo não encontrado.");
         }
 
-        public async Task<bool> ValidateIfTitleIsAlreadyTaken(string title)
+        public async Task<bool> ValidateIfTitleIsAlreadyTaken(string title, string? id = null)
         {
             var response = await client.SearchAsync<Domain.Entities.Game>(s => s
                 .Indices(GAME_ELASTIC_SEARCH_INDEX)
                 .Size(0)
-                .Query(q => q
-                    .Term(t => t
+                .Query(q => q.Bool(b => b
+                    .Must(m => m.Term(t => t
                         .Field(x => x.Title)
                         .Value(title)
-                    )
+                    ))
+                    .MustNot(mn => mn.Ids(i => i
+                        .Values(id)
+                    ))
                 )
-            );
-
+            ));
+            
             return response.Total > 0;
         }
 
@@ -250,7 +254,7 @@ namespace FCG.Game.Application.Services
             //pegando os generos  dos jogos q o usuario tem em sua biblioteca
             string? mostFrequentGenre = await GetMostFrequentGameAsync(gameIds);
 
-            SearchResponse<Domain.Entities.Game> resp = await GetGamesByGenreExcludingGameThatUserHas(gameIds, mostFrequentGenre);
+            SearchResponse<Domain.Entities.Game> resp = await GetGamesByGenreExcludingGameThatUserHas(gameIds, mostFrequentGenre, page, size);
 
             if (!resp.IsValidResponse)
                 throw new BusinessErrorDetailsException("response inválido");
@@ -266,13 +270,14 @@ namespace FCG.Game.Application.Services
             }).ToArray();
         }
 
-        private async Task<SearchResponse<Domain.Entities.Game>> GetGamesByGenreExcludingGameThatUserHas(string[] gameIds, string? mostFrequentGenre)
+        private async Task<SearchResponse<Domain.Entities.Game>> GetGamesByGenreExcludingGameThatUserHas(string[] gameIds, string? mostFrequentGenre, int page, int size)
         {
             // Pesquisa no Elastic os jogos do genero mais frequente, desconsiderando os jogos que o usuario ja tem
             //e ordenando por popularidade
             return await client.SearchAsync<Domain.Entities.Game>(s => s
                 .Indices(GAME_ELASTIC_SEARCH_INDEX)
-                .Size(10)
+                .From((page - 1) * size)
+                .Size(size)
                 .Query(q => q.Bool(b => b
                     .Must(m => m.Term(t => t
                         .Field("genre.keyword")

@@ -12,7 +12,7 @@ O serviço de jogos é responsável por gerenciar o catálogo de jogos e promoç
 
 ### <img align="center" height="30" width="40" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/elasticsearch/elasticsearch-original.svg"> Elastic Search
 
-Os dados dos jogos são armazenados no Elastic Cloud. A classe que cuida da conexão é <b>"FCG.Game.API/Configurations/ElasticSearchConfig.cs"</b> e a classe que faz as logicas de consultas é <b>"FCG.Game.Application/Services/GameServices.cs"</b>
+Os dados dos jogos são armazenados no Elastic Cloud. A classe que cuida da conexão é <b>"FCG.Game.API/Configurations/ElasticSearchConfig.cs"</b> e a classe que faz as logicas de consultas é <b>"FCG.Game.Application/Services/GameServices.cs"</b>. Enquanto os dados de promoções são salvos no SQLServer.
 
 ### :computer: Comunicação com a api de usuarios
 

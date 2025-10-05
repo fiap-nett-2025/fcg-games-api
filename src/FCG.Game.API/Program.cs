@@ -10,7 +10,6 @@ using FCG.Game.Application.Services;
 using FCG.Game.Application.Middlewares;
 using FCG.Game.Infra.Data.Repository;
 using FCG.Game.Infra.Data.Data;
-using FCG.Game.Infra.Data.Seedings;
 using FCG.Game.Domain.Interfaces;
 using FCG.Game.Domain.Services;
 using FCG.Game.API.Configurations;
@@ -65,6 +64,17 @@ builder.Services.AddAuthorization(options =>
         policy.RequireAuthenticatedUser());
 });
 
+#region API clients
+var apiSection = builder.Configuration.GetSection("API");
+if (!apiSection.Exists())
+    throw new InvalidOperationException("Section 'API' not found in configuration.");
+
+builder.Services.AddHttpClient("UsersApi", client =>
+{
+    client.BaseAddress = new Uri(apiSection["UsersApiBaseUrl"] ?? "");
+});
+#endregion
+
 // ✅ Serviços
 builder.Services.AddScoped<IGameService, GameService>();
 
@@ -76,13 +86,7 @@ builder.Services.AddSingleton(builder.Configuration);
 builder.Services.AddScoped<IPromotionRepository, PromotionRepository>();
 builder.Services.AddScoped<IPromotionService, PromotionService>();
 builder.Services.AddScoped<IPricingService, PricingService>();
-builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddHttpClient();
-
-builder.Services.AddHttpClient<IUserService, UserService>(client =>
-{
-    client.BaseAddress = new Uri("https://fcg-user-api.whitesea-88353420.westus2.azurecontainerapps.io/");
-});
 
 builder.Services.AddSwaggerConfiguration();
 
@@ -104,10 +108,7 @@ if (app.Environment.IsDevelopment() || app.Environment.IsStaging() || app.Enviro
     {
         await using var scope = app.Services.CreateAsyncScope();
         await using var dbContext = scope.ServiceProvider.GetRequiredService<FcgGameDbContext>();
-        if (dbContext.Database.EnsureCreated())
-        {
-            await GameSeeding.SeedAsync(dbContext);
-        }
+        
     }
     catch (Exception ex)
     {

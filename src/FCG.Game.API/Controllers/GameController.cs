@@ -2,37 +2,40 @@
 using FCG.Game.Application.Interfaces;
 using FCG.Game.Application.DTOs;
 using FCG.Game.Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
 
 namespace FCG.Game.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
+    
     public class GameController(IGameService gameService) : ApiBaseController
     {
-        [HttpGet("{page}/{size}")]
-        public async Task<IActionResult> GetAll([FromRoute] int page, [FromRoute] int size)
+        [HttpGet()]
+        public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int size = 10)
         {
              if (page < 1)
              {
                 return BadRequest("O número da página deve ser maior que 0.");
              }
-            var games = await gameService.GetGamesPaginated(page, size);
+            var games = await gameService.GetGamesPaginatedAsync(page, size);
             return Success(games);
         }
 
-        [HttpGet("Popularity/{page}/{size}")]
-        public async Task<IActionResult> GetPopularGames([FromRoute] int page, [FromRoute] int size)
+        [HttpGet("Popularity")]
+        public async Task<IActionResult> GetPopularGames([FromQuery] int page = 1, [FromQuery] int size = 10)
         {
             if (page < 1)
             {
                 return BadRequest("O número da página deve ser maior que 0.");
             }
-            var games = await gameService.GetMostPopularGamesPaginated(page, size);
+            var games = await gameService.GetMostPopularGamesPaginatedAsync(page, size);
             return Success(games);
         }
 
-        [HttpGet("Recommended/{page}/{size}")]
-        public async Task<IActionResult> GetRecommendedGames([FromRoute] int page, [FromRoute] int size)
+        [HttpGet("Recommended")]
+        public async Task<IActionResult> GetRecommendedGames([FromQuery] int page = 1, [FromQuery] int size = 10)
         {
             if (page < 1)
             {
@@ -42,7 +45,7 @@ namespace FCG.Game.API.Controllers
             var userId = GetUserId();
             var jwt = GetJwtToken();
 
-            var games = await gameService.GetRecommendedGamesPaginated(page, size, userId, jwt);
+            var games = await gameService.GetRecommendedGamesPaginatedAsync(page, size, userId, jwt);
             return Success(games);
         }
 
@@ -56,11 +59,12 @@ namespace FCG.Game.API.Controllers
         [HttpPatch("Popularity")]
         public async Task<IActionResult> IncreasePopularity([FromBody] List<string> ids)
         {
-            var games = await gameService.IncreasePopularity(ids);
+            var games = await gameService.IncreasePopularityAsync(ids);
             return Success(games, "Popularidade atualizada com sucesso.");
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> InsertGame([FromBody] CreateGameDTO dto)
         {
             var game = await gameService.InsertAsync(dto);
@@ -68,6 +72,7 @@ namespace FCG.Game.API.Controllers
         }
 
         [HttpPatch("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateGame([FromRoute] string id, [FromBody] PartialUpdateGameDTO dto)
         {
             var game = await gameService.PartialUpdateAsync(id, dto);
@@ -75,6 +80,7 @@ namespace FCG.Game.API.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteById([FromRoute] string id)
         {
             await gameService.DeleteByIdAsync(id);
@@ -85,7 +91,8 @@ namespace FCG.Game.API.Controllers
         /// APAGA TODOS os documentos do índice configurado (ex.: Search:DefaultIndex).
         /// Use com cuidado! 
         /// </summary>
-        [HttpDelete("delete-all-games")]
+        [HttpDelete("DeleteAll")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> ClearIndex()
         {
             await gameService.DeleteAllAsync();

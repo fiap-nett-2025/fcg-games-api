@@ -1,17 +1,16 @@
 ﻿using AutoMapper;
-using Azure;
 using Elastic.Clients.Elasticsearch;
 using Elastic.Clients.Elasticsearch.QueryDsl;
 using FCG.Game.Application.DTOs;
 using FCG.Game.Application.Exceptions;
 using FCG.Game.Application.Interfaces;
-using FCG.Game.Domain.Entities;
-using Newtonsoft.Json.Linq;
+using System.Net.Http.Headers;
 using System.Text.Json;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace FCG.Game.Application.Services
 {
-    public class GameService(ElasticsearchClient client, IMapper mapper) : IGameService
+    public class GameService(ElasticsearchClient client, IMapper mapper, IHttpClientFactory httpClientFactory) : IGameService
     {
         const string GAME_ELASTIC_SEARCH_INDEX = "search-97tr";
 
@@ -22,6 +21,12 @@ namespace FCG.Game.Application.Services
             Domain.Entities.Game.ValidateDescription(dto.Description);
             Domain.Entities.Game.ValidateGenreList(dto.Genre);
             var game = mapper.Map<Domain.Entities.Game>(dto);
+
+            var exists = await ValidateIfTitleIsAlreadyTaken(game.Title);
+            if (exists)
+            {
+                throw new InvalidOperationException($"Já existe um jogo com o título '{game.Title}'.");
+            }
 
             var response = await client.IndexAsync(game, i => i
                     .Index(GAME_ELASTIC_SEARCH_INDEX)
@@ -45,7 +50,7 @@ namespace FCG.Game.Application.Services
             };
         }
 
-        public async Task<IEnumerable<GameDTO>> GetGamesPaginated(int page, int size)
+        public async Task<IEnumerable<GameDTO>> GetGamesPaginatedAsync(int page, int size)
         {
             var response = await client.SearchAsync<Domain.Entities.Game>(s => s
                 .Indices(GAME_ELASTIC_SEARCH_INDEX)
@@ -66,7 +71,7 @@ namespace FCG.Game.Application.Services
             return games;
         }
 
-        public async Task<IEnumerable<GameDTO>> GetMostPopularGamesPaginated(int page, int size)
+        public async Task<IEnumerable<GameDTO>> GetMostPopularGamesPaginatedAsync(int page, int size)
         {
             var response = await client.SearchAsync<Domain.Entities.Game>(s => s
                 .Indices(GAME_ELASTIC_SEARCH_INDEX)
@@ -151,7 +156,13 @@ namespace FCG.Game.Application.Services
             Domain.Entities.Game.ValidateDescription(game.Description);
             Domain.Entities.Game.ValidateGenreList(game.Genre);
 
-            var response = await UpdateData(gameId, game, OpType.Index);
+            var exists = await ValidateIfTitleIsAlreadyTaken(game.Title);
+            if (exists)
+            {
+                throw new InvalidOperationException($"Já existe um jogo com o título '{game.Title}'.");
+            }
+
+            var response = await UpdateDataAsync(gameId, game, OpType.Index);
             return new GameDTO()
             {
                 Id = response.Id,
@@ -163,7 +174,7 @@ namespace FCG.Game.Application.Services
             };
         }
 
-        public async Task<IEnumerable<GameDTO>> IncreasePopularity(IEnumerable<string> gameIds)
+        public async Task<IEnumerable<GameDTO>> IncreasePopularityAsync(IEnumerable<string> gameIds)
         {
             var updatedGames = new List<GameDTO>();
 
@@ -172,7 +183,7 @@ namespace FCG.Game.Application.Services
                 var game = await GetGameByIdAsync(gameId);
                 game.Popularity++;
 
-                var response = await UpdateData(gameId, game, OpType.Index);
+                var response = await UpdateDataAsync(gameId, game, OpType.Index);
 
                 updatedGames.Add(new GameDTO
                 {
@@ -188,7 +199,7 @@ namespace FCG.Game.Application.Services
             return updatedGames;
         }
         
-        private async Task<IndexResponse> UpdateData( string gameId, Domain.Entities.Game game, OpType operation)
+        private async Task<IndexResponse> UpdateDataAsync( string gameId, Domain.Entities.Game game, OpType operation)
         {
             var response = await client.IndexAsync(game, i => i
                     .Index(GAME_ELASTIC_SEARCH_INDEX)
@@ -210,76 +221,36 @@ namespace FCG.Game.Application.Services
                 ?? throw new NotFoundException("Jogo não encontrado.");
         }
 
-
-        public async Task<IEnumerable<GameDTO>> GetRecommendedGamesPaginated(int page, int size, Guid userId, string jwt)
+        public async Task<bool> ValidateIfTitleIsAlreadyTaken(string title)
         {
-            using var httpClient = new HttpClient
+            var response = await client.SearchAsync<Domain.Entities.Game>(s => s
+                .Indices(GAME_ELASTIC_SEARCH_INDEX)
+                .Size(0)
+                .Query(q => q
+                    .Term(t => t
+                        .Field(x => x.Title)
+                        .Value(title)
+                    )
+                )
+            );
+
+            return response.Total > 0;
+        }
+
+        public async Task<IEnumerable<GameDTO>> GetRecommendedGamesPaginatedAsync(int page, int size, Guid userId, string jwt)
+        {
+            string[] gameIds = await GetGameIdsFromUserLibraryAsync(userId, jwt);
+
+            //se usuario nao tem 
+            if (gameIds.Length == 0)
             {
-                BaseAddress = new Uri("http://localhost:5001/")
-            };
-
-            httpClient.DefaultRequestHeaders.Authorization =
-                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwt);
-
-            var libraryResponse = await httpClient.GetAsync($"api/UserGameLibrary/{userId}");
-
-            if (!libraryResponse.IsSuccessStatusCode)
-                throw new Exception("Não foi possível buscar a biblioteca do usuário");
-
-            var json = await libraryResponse.Content.ReadAsStringAsync();
-
-            // Parse genérico sem DTO
-            using var doc = JsonDocument.Parse(json);
-
-            var root = doc.RootElement;
-
-            // navegar até "data" e extrair todos os "gameId"
-            var gameIds = root
-                .GetProperty("data")
-                .EnumerateArray()
-                .Select(x => x.GetProperty("gameId").GetString()!)
-                .ToArray();
-
-            //pegando os generos  dos jogos q o usuario tem em sua biblioteca
-            var allGenres = new List<string>();
-
-            foreach (var gameId in gameIds) {
-                var response = await client.GetAsync<Domain.Entities.Game>(gameId, g =>
-                    g.Index(GAME_ELASTIC_SEARCH_INDEX));
-
-                if (response.Found && response.Source?.Genre is not null)
-                {
-                    allGenres.AddRange(response.Source.Genre.Select(g => g.ToString()));
-                }
+                return await GetMostPopularGamesPaginatedAsync(page, size);
             }
 
-            //pega o genero mais frequente
-            var modeGenre = allGenres
-                .GroupBy(g => g)
-                .OrderByDescending(g => g.Count())
-                .ThenBy(g => g.Key)          // desempate estável
-                .Select(g => g.Key)
-                .FirstOrDefault();
+            //pegando os generos  dos jogos q o usuario tem em sua biblioteca
+            string? mostFrequentGenre = await GetMostFrequentGameAsync(gameIds);
 
-            //fazer mensagem caso usuario n tenha nada na biblioteca, logo n tem nada para recomentar
-
-            
-            // Pesquisa no Elastic os jogos do genero mais frequente, desconsiderando os jogos que o usuario ja tem
-            //e ordenando por popularidade
-            var resp = await client.SearchAsync<Domain.Entities.Game>(s => s
-                .Indices(GAME_ELASTIC_SEARCH_INDEX)
-                .Size(10)
-                .Query(q => q.Bool(b => b
-                    .Must(m => m.Term(t => t
-                        .Field("genre.keyword")
-                        .Value(modeGenre)
-                        .CaseInsensitive(true)
-                    ))
-                    .MustNot(mn => mn.Ids(i => i
-                        .Values(gameIds)           
-                    ))
-                ))
-            );
+            SearchResponse<Domain.Entities.Game> resp = await GetGamesByGenreExcludingGameThatUserHas(gameIds, mostFrequentGenre);
 
             if (!resp.IsValidResponse)
                 throw new BusinessErrorDetailsException("response inválido");
@@ -293,6 +264,87 @@ namespace FCG.Game.Application.Services
                 Price = game.Source.Price,
                 Popularity = game.Source.Popularity
             }).ToArray();
+        }
+
+        private async Task<SearchResponse<Domain.Entities.Game>> GetGamesByGenreExcludingGameThatUserHas(string[] gameIds, string? mostFrequentGenre)
+        {
+            // Pesquisa no Elastic os jogos do genero mais frequente, desconsiderando os jogos que o usuario ja tem
+            //e ordenando por popularidade
+            return await client.SearchAsync<Domain.Entities.Game>(s => s
+                .Indices(GAME_ELASTIC_SEARCH_INDEX)
+                .Size(10)
+                .Query(q => q.Bool(b => b
+                    .Must(m => m.Term(t => t
+                        .Field("genre.keyword")
+                        .Value(mostFrequentGenre)
+                        .CaseInsensitive(true)
+                    ))
+                    .MustNot(mn => mn.Ids(i => i
+                        .Values(gameIds)
+                    ))
+                )).Sort(sort => sort
+                      .Field(g => g.Popularity, SortOrder.Desc)
+                )
+            );
+        }
+
+        private async Task<string?> GetMostFrequentGameAsync(string[] gameIds)
+        {
+            var allGenres = new List<string>();
+
+            foreach (var gameId in gameIds)
+            {
+                var response = await client.GetAsync<Domain.Entities.Game>(gameId, g =>
+                    g.Index(GAME_ELASTIC_SEARCH_INDEX));
+
+                if (response.Found && response.Source?.Genre is not null)
+                {
+                    allGenres.AddRange(response.Source.Genre.Select(g => g.ToString()));
+                }
+            }
+
+            //pega o genero mais frequente
+            var mostFrequentGenre = allGenres
+                .GroupBy(g => g)
+                .OrderByDescending(g => g.Count())
+                .ThenBy(g => g.Key)          // desempate 
+                .Select(g => g.Key)
+                .FirstOrDefault();
+            return mostFrequentGenre;
+        }
+
+        private async Task<string[]> GetGameIdsFromUserLibraryAsync(Guid userId, string jwt)
+        {
+            try
+            {
+                var httpClient = httpClientFactory.CreateClient("UsersApi");
+
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
+
+                var libraryResponse = await httpClient.GetAsync($"api/UserGameLibrary/{userId}");
+
+                if (!libraryResponse.IsSuccessStatusCode)
+                    throw new BusinessErrorDetailsException("Não foi possível buscar a biblioteca do usuário");
+
+                var json = await libraryResponse.Content.ReadAsStringAsync();
+
+                // Parse genérico sem DTO
+                using var doc = JsonDocument.Parse(json);
+
+                var root = doc.RootElement;
+
+                // navegar até "data" e extrair todos os "gameId"
+                var gameIds = root
+                    .GetProperty("data")
+                    .EnumerateArray()
+                    .Select(x => x.GetProperty("gameId").GetString()!)
+                    .ToArray();
+
+                return gameIds;
+            }
+            catch (Exception ex) {
+                throw new BusinessErrorDetailsException("Algo deu erro");
+            }
         }
     }
 }

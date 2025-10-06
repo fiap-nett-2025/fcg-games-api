@@ -4,13 +4,13 @@ namespace FCG.Games.Domain.Entities;
 
 public class Game
 {
-    public string Id { get; set; } 
-    public string Title { get;  set; } = null!;
-    public decimal Price { get;  set; }
-    public string Description { get;  set; } = null!;
-    public List<GameGenre> Genre { get;  set; } = [];
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public long Popularity { get; set; }
+    public string Id { get; private set; } = null!;
+    public string Title { get; private set; } = null!;
+    public decimal Price { get; private set; }
+    public string Description { get; private set; } = null!;
+    public List<GameGenre> Genre { get; private set; } = [];
+    public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
+    public long Popularity { get; private set; }
 
     public Game(string title, decimal price, string description, List<GameGenre> genre)
     {
@@ -24,7 +24,7 @@ public class Game
         Description = description;
         Genre = genre;
     }
-
+    #region Validators
     public static void ValidateTitle(string? title)
     {
         if (string.IsNullOrWhiteSpace(title))
@@ -48,7 +48,8 @@ public class Game
         if (genre == null || genre.Count == 0)
             throw new ArgumentException("Genero não pode ser vazio ou nulo.");
     }
-
+    #endregion
+    #region Updaters
     public void UpdateTitle(string title)
     {
         ValidateTitle(title);
@@ -72,5 +73,11 @@ public class Game
         ValidateGenreList(genre);
         Genre = genre;
     }
+
+    public void IncrementPopularity()
+    {
+        Popularity++;
+    }
+    #endregion
 }
 

@@ -1,4 +1,4 @@
-﻿﻿# 🎮 FIAP Cloud Games (FCG) - Game Service
+# 🎮 FIAP Cloud Games (FCG) - Game Service
 
 ## 📚 Sobre o Projeto
 

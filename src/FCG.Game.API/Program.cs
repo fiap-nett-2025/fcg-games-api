@@ -75,6 +75,7 @@ builder.Services.AddHttpClient("UsersApi", client =>
 });
 #endregion
 
+
 // ✅ Serviços
 builder.Services.AddScoped<IGameService, GameService>();
 

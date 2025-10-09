@@ -1,34 +1,26 @@
-﻿using AutoMapper;
-using Elastic.Clients.Elasticsearch;
-using Elastic.Clients.Elasticsearch.MachineLearning;
+﻿using Elastic.Clients.Elasticsearch;
 using Elastic.Clients.Elasticsearch.QueryDsl;
 using FCG.Games.Application.Exceptions;
 using FCG.Games.Application.DTOs;
 using FCG.Games.Application.Interfaces;
 using System.Net.Http.Headers;
 using System.Text.Json;
-using static System.Net.Mime.MediaTypeNames;
 using FCG.Games.Domain.Entities;
+using FCG.Games.Application.Mappers;
 
 namespace FCG.Games.Application.Services
 {
-    public class GameService(ElasticsearchClient client, IMapper mapper, IHttpClientFactory httpClientFactory) : IGameService
+    public class GameService(ElasticsearchClient client, IHttpClientFactory httpClientFactory) : IGameService
     {
         const string GAME_ELASTIC_SEARCH_INDEX = "search-97tr";
 
         public async Task<GameDTO> InsertAsync(CreateGameDTO dto)
         {
-            Game.ValidateTitle(dto.Title);
-            Game.ValidatePrice(dto.Price);
-            Game.ValidateDescription(dto.Description);
-            Game.ValidateGenreList(dto.Genre);
-            var game = mapper.Map<Game>(dto);
+            var game = new Game(dto.Title, dto.Price, dto.Description, dto.Genre);
 
             var exists = await ValidateIfTitleIsAlreadyTaken(game.Title);
             if (exists)
-            {
                 throw new InvalidOperationException($"Já existe um jogo com o título '{game.Title}'.");
-            }
 
             var response = await client.IndexAsync(game, i => i
                     .Index(GAME_ELASTIC_SEARCH_INDEX)
@@ -41,15 +33,7 @@ namespace FCG.Games.Application.Services
                 throw new InvalidOperationException($"Falha ao indexar jogo em '{GAME_ELASTIC_SEARCH_INDEX}': {errorMessage}");
             }
             
-            return new GameDTO()
-            {
-                Id = response.Id,
-                Description = game.Description,
-                Genre = game.Genre,
-                Price = game.Price,
-                Title = game.Title,
-                Popularity = game.Popularity
-            };
+            return GameMappers.MapToDto(game, response.Id);
         }
 
         public async Task<IEnumerable<GameDTO>> GetGamesPaginatedAsync(int page, int size)
@@ -60,17 +44,7 @@ namespace FCG.Games.Application.Services
                 .Size(size)
             );
 
-            var games = response.Hits.Select(game => new GameDTO
-            {
-                Id = game.Id,
-                Title = game.Source.Title,
-                Description = game.Source.Description,
-                Genre = game.Source.Genre,
-                Price = game.Source.Price,
-                Popularity = game.Source.Popularity
-            });
-
-            return games;
+            return GameMappers.ResponseToGameDTOList(response);
         }
 
         public async Task<IEnumerable<GameDTO>> GetMostPopularGamesPaginatedAsync(int page, int size)
@@ -84,31 +58,13 @@ namespace FCG.Games.Application.Services
                 )
             );
 
-            var games = response.Hits.Select(game => new GameDTO
-            {
-                Id = game.Id,
-                Title = game.Source.Title,
-                Description = game.Source.Description,
-                Genre = game.Source.Genre,
-                Price = game.Source.Price,
-                Popularity = game.Source.Popularity
-            });
-
-            return games;
+            return GameMappers.ResponseToGameDTOList(response);
         }
 
         public async Task<GameDTO> GetByIdAsync(string id)
         {
             var game = await GetGameByIdAsync(id);
-            return new GameDTO()
-            {
-                Id = id,
-                Description = game.Description,
-                Genre = game.Genre,
-                Price = game.Price,
-                Title = game.Title,
-                Popularity = game.Popularity
-            };
+            return GameMappers.MapToDto(game, id);
         }
 
         public async Task<bool> DeleteByIdAsync(string id)
@@ -148,32 +104,17 @@ namespace FCG.Games.Application.Services
         {
             var game = await GetGameByIdAsync(gameId);
 
-            game.Title = dto.Title ?? game.Title;
-            game.Price = dto.Price ?? game.Price;
-            game.Description = dto.Description ?? game.Description;
-            game.Genre = dto.Genre ?? game.Genre;
-
-            Game.ValidateTitle(game.Title);
-            Game.ValidatePrice(game.Price);
-            Game.ValidateDescription(game.Description);
-            Game.ValidateGenreList(game.Genre);
+            game.UpdateTitle(dto.Title ?? game.Title);
+            game.UpdatePrice(dto.Price ?? game.Price);
+            game.UpdateDescription(dto.Description ?? game.Description);
+            game.UpdateGenre(dto.Genre ?? game.Genre);
 
             var exists = await ValidateIfTitleIsAlreadyTaken(game.Title, gameId);
             if (exists)
-            {
                 throw new InvalidOperationException($"Já existe um jogo com o título '{game.Title}'.");
-            }
 
             var response = await UpdateDataAsync(gameId, game, OpType.Index);
-            return new GameDTO()
-            {
-                Id = response.Id,
-                Description = game.Description,
-                Genre = game.Genre,
-                Price = game.Price,
-                Title = game.Title,
-                Popularity = game.Popularity
-            };
+            return GameMappers.MapToDto(game, response.Id);
         }
 
         public async Task<IEnumerable<GameDTO>> IncreasePopularityAsync(IEnumerable<string> gameIds)
@@ -183,21 +124,12 @@ namespace FCG.Games.Application.Services
             foreach (var gameId in gameIds)
             {
                 var game = await GetGameByIdAsync(gameId);
-                game.Popularity++;
+                game.IncrementPopularity();
 
                 var response = await UpdateDataAsync(gameId, game, OpType.Index);
 
-                updatedGames.Add(new GameDTO
-                {
-                    Id = response.Id,
-                    Description = game.Description,
-                    Genre = game.Genre,
-                    Price = game.Price,
-                    Title = game.Title,
-                    Popularity = game.Popularity
-                });
+                updatedGames.Add(GameMappers.MapToDto(game, response.Id));
             }
-
             return updatedGames;
         }
         
@@ -247,10 +179,8 @@ namespace FCG.Games.Application.Services
             string[] gameIds = await GetGameIdsFromUserLibraryAsync(userId, jwt);
 
             //se usuario nao tem 
-            if (gameIds.Length == 0)
-            {
-                return await GetMostPopularGamesPaginatedAsync(page, size);
-            }
+            if (gameIds.Length == 0) 
+                await GetMostPopularGamesPaginatedAsync(page, size);
 
             //pegando os generos  dos jogos q o usuario tem em sua biblioteca
             string? mostFrequentGenre = await GetMostFrequentGameAsync(gameIds);
@@ -260,15 +190,7 @@ namespace FCG.Games.Application.Services
             if (!resp.IsValidResponse)
                 throw new BusinessErrorDetailsException("response inválido");
 
-            return resp.Hits.Select(game => new GameDTO
-            {
-                Id = game.Id,
-                Title = game.Source.Title,
-                Description = game.Source.Description,
-                Genre = game.Source.Genre,
-                Price = game.Source.Price,
-                Popularity = game.Source.Popularity
-            }).ToArray();
+            return GameMappers.ResponseToGameDTOList(resp).ToArray();
         }
 
         private async Task<SearchResponse<Game>> GetGamesByGenreExcludingGameThatUserHas(string[] gameIds, string? mostFrequentGenre, int page, int size)
@@ -304,9 +226,7 @@ namespace FCG.Games.Application.Services
                     g.Index(GAME_ELASTIC_SEARCH_INDEX));
 
                 if (response.Found && response.Source?.Genre is not null)
-                {
                     allGenres.AddRange(response.Source.Genre.Select(g => g.ToString()));
-                }
             }
 
             //pega o genero mais frequente

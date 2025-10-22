@@ -18,9 +18,8 @@ namespace FCG.Games.Application.Services
         {
             var game = new Game(dto.Title, dto.Price, dto.Description, dto.Genre);
 
-            var exists = await ValidateIfTitleIsAlreadyTaken(game.Title);
-            if (exists)
-                throw new InvalidOperationException($"Já existe um jogo com o título '{game.Title}'.");
+            if (await TitleExistsAsync(game.Title))
+                throw new BusinessErrorDetailsException($"Já existe um jogo com o título '{game.Title}'.");
 
             var response = await client.IndexAsync(game, i => i
                     .Index(GAME_ELASTIC_SEARCH_INDEX)
@@ -67,6 +66,13 @@ namespace FCG.Games.Application.Services
             return GameMappers.MapToDto(game, id);
         }
 
+        private async Task<Game> GetGameByIdAsync(string id)
+        {
+            var response = await client.GetAsync<Game>(id, g => g.Index(GAME_ELASTIC_SEARCH_INDEX));
+            return (response?.Source)
+                ?? throw new NotFoundException("Jogo não encontrado.");
+        }
+
         public async Task<bool> DeleteByIdAsync(string id)
         {
             var response = await client.DeleteAsync<Game>(id, d => d.Index(GAME_ELASTIC_SEARCH_INDEX));
@@ -109,8 +115,7 @@ namespace FCG.Games.Application.Services
             game.UpdateDescription(dto.Description ?? game.Description);
             game.UpdateGenre(dto.Genre ?? game.Genre);
 
-            var exists = await ValidateIfTitleIsAlreadyTaken(game.Title, gameId);
-            if (exists)
+            if (await TitleExistsAsync(game.Title, gameId))
                 throw new InvalidOperationException($"Já existe um jogo com o título '{game.Title}'.");
 
             var response = await UpdateDataAsync(gameId, game, OpType.Index);
@@ -148,14 +153,7 @@ namespace FCG.Games.Application.Services
             return response;
         }
 
-        private async Task<Game> GetGameByIdAsync(string id)
-        {
-            var response = await client.GetAsync<Game>(id, g => g.Index(GAME_ELASTIC_SEARCH_INDEX));
-            return (response?.Source)
-                ?? throw new NotFoundException("Jogo não encontrado.");
-        }
-
-        public async Task<bool> ValidateIfTitleIsAlreadyTaken(string title, string? id = null)
+        public async Task<bool> TitleExistsAsync(string title, string? id = null)
         {
             var response = await client.SearchAsync<Game>(s => s
                 .Indices(GAME_ELASTIC_SEARCH_INDEX)
@@ -269,7 +267,7 @@ namespace FCG.Games.Application.Services
                 return gameIds;
             }
             catch (Exception ex) {
-                throw new BusinessErrorDetailsException("Algo deu erro");
+                throw new BusinessErrorDetailsException($"Algo deu errado: {ex}");
             }
         }
     }

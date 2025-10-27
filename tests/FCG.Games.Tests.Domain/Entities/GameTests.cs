@@ -6,10 +6,10 @@ namespace FCG.Games.Tests.Domain.Entities;
 public class GameTests
 {
     [Fact]
-    public void Constructor_ValidParameters_CreatesGame()
+    public void Create_ValidParameters_CreatesGame()
     {
         // Arrange & Act
-        var game = new  Game("Test Game", 0.99m, "descricao", [GameGenre.Horror]);
+        var game = Game.Create("Test Game", 0.99m, "descricao", [GameGenre.Horror]);
 
         // Assert
         Assert.Equal("Test Game", game.Title);
@@ -22,32 +22,49 @@ public class GameTests
     [InlineData(null)]
     [InlineData("")]
     [InlineData(" ")]
-    public void Constructor_InvalidTitle_ArgumentException(string invalidTitle)
+    public void Create_InvalidTitle_ArgumentException(string invalidTitle)
     {
         // Arrange, Act & Assert
-        Assert.Throws<ArgumentException>(() => new Game(invalidTitle, 0.99m, "descricao", [GameGenre.Horror]));
+        Assert.Throws<ArgumentException>(() => Game.Create(invalidTitle, 0.99m, "descricao", [GameGenre.Horror]));
     }
 
     [Fact]
-    public void Constructor_InvalidPrice_ArgumentException()
+    public void Create_InvalidPrice_ArgumentException()
     {
         // Arrange, Act & Assert
-        Assert.Throws<ArgumentException>(() => new Game("Test Game", -0.99m, "descricao", [GameGenre.Horror]));
+        Assert.Throws<ArgumentException>(() => Game.Create("Test Game", -0.99m, "descricao", [GameGenre.Horror]));
     }
 
     [Theory]
     [InlineData(null)]
     [InlineData("")]
     [InlineData(" ")]
-    public void Constructor_InvalidDescription_Exception(string invalidDescription)
+    public void Create_InvalidDescription_Exception(string invalidDescription)
     {
-        Assert.Throws<ArgumentException>(() => new Game("Test Game", 0.99m, invalidDescription, [GameGenre.Horror]));
+        Assert.Throws<ArgumentException>(() => Game.Create("Test Game", 0.99m, invalidDescription, [GameGenre.Horror]));
     }
 
     [Theory]
     [InlineData(null)]
-    public void Constructor_InvalidGenre_Exception(List<GameGenre> invalidGenre)
+    public void Create_InvalidGenre_Exception(List<GameGenre> invalidGenre)
     {
-        Assert.Throws<ArgumentException>(() => new Game("Test Game", 0.99m, "descricao", invalidGenre));
+        Assert.Throws<ArgumentException>(() => Game.Create("Test Game", 0.99m, "descricao", invalidGenre));
+    }
+
+    [Fact]
+    public void Reconstruct_ValidParameters_ReconstructObject()
+    {
+        // Arrange & Act
+        var game = Game.Reconstruct("abc123", "Test Game", 0.99m, "descricao", [GameGenre.Horror], 100);
+
+        // Assert
+        Assert.Equal("abc123", game.Id);
+    }
+
+    [Fact]
+    public void Reconstruct_NullId_ArgumentException()
+    {
+        // Arrange, Act & Assert
+        Assert.Throws<ArgumentException>(() => Game.Reconstruct(null!, "Test Game", 0.99m, "descricao", [GameGenre.Horror], 100));
     }
 }

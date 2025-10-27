@@ -12,18 +12,30 @@ public class Game
     public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
     public long Popularity { get; private set; }
 
-    public Game(string title, decimal price, string description, List<GameGenre> genre)
+    private Game(string title, decimal price, string description, List<GameGenre> genre)
     {
-        ValidateTitle(title);
-        ValidatePrice(price);
-        ValidateDescription(description);
-        ValidateGenreList(genre);
-
         Title = title;
         Price = price;
         Description = description;
         Genre = genre;
     }
+
+    public static Game Create(string title, decimal price, string description, List<GameGenre> genre)
+    {
+        ValidateTitle(title);
+        ValidatePrice(price);
+        ValidateDescription(description);
+        ValidateGenreList(genre);
+        return new Game(title, price, description, genre);
+    }
+    public static Game Reconstruct(string id, string title, decimal price, string description, List<GameGenre> genre, long popularity)
+    {
+        var game = Create(title, price, description, genre);
+        game.Id = id ?? throw new ArgumentException("Id não pode ser vazio ou nulo.");
+        game.Popularity = popularity;
+        return game;
+    }
+
     #region Validators
     public static void ValidateTitle(string? title)
     {

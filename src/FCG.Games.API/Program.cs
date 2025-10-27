@@ -86,6 +86,8 @@ builder.Services.AddSingleton(builder.Configuration);
 
 builder.Services.AddScoped<IPromotionRepository, PromotionRepository>();
 builder.Services.AddScoped<IGameRepository, ElasticsearchGameRepository>();
+builder.Services.AddScoped<IGameRecommendationService, RecommendationService>();
+builder.Services.AddScoped<IUserLibraryClient, UserLibraryClient>();
 builder.Services.AddScoped<IPromotionService, PromotionService>();
 builder.Services.AddScoped<IPricingService, PricingService>();
 builder.Services.AddHttpClient();

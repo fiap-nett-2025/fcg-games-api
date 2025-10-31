@@ -1,18 +1,18 @@
-﻿using Microsoft.EntityFrameworkCore.ChangeTracking;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-
-using System.Text;
+﻿using Elastic.Clients.Elasticsearch;
+using FCG.Games.API.Configurations;
+using FCG.Games.Application.Interfaces;
+using FCG.Games.Application.Middlewares;
+using FCG.Games.Application.Services;
 using FCG.Games.Domain.Interfaces;
 using FCG.Games.Domain.Services;
 using FCG.Games.Infra.Data.Data;
 using FCG.Games.Infra.Data.Repository;
-using FCG.Games.Application.Interfaces;
-using FCG.Games.Application.Services;
-using FCG.Games.Application.Middlewares;
-using FCG.Games.API.Configurations;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -80,7 +80,6 @@ builder.Services.AddHttpClient("UsersApi", client =>
 builder.Services.AddScoped<IGameService, GameService>();
 
 builder.Services.AddElasticsearch(builder.Configuration);
-builder.Services.AddAutoMapperConfiguration();
 builder.Services.AddScoped<IGameService, GameService>();
 builder.Services.AddSingleton(builder.Configuration);
 
@@ -111,6 +110,8 @@ if (app.Environment.IsDevelopment() || app.Environment.IsStaging() || app.Enviro
     try
     {
         await using var scope = app.Services.CreateAsyncScope();
+        var elasticClient = scope.ServiceProvider.GetRequiredService<ElasticsearchClient>();
+        await ElasticSearchConfig.InitializeElasticsearchIndexAsync(elasticClient, "fcg-games");
         await using var dbContext = scope.ServiceProvider.GetRequiredService<FcgGameDbContext>();
         
     }

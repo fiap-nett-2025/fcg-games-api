@@ -66,7 +66,7 @@ namespace FCG.Games.API.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> InsertGame([FromBody] CreateGameDTO dto)
         {
-            var game = await gameService.InsertAsync(dto);
+            var game = await gameService.CreateGameAsync(dto);
             return CreatedResponse(game, "Jogo criado com sucesso.");
         }
 

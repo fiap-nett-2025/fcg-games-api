@@ -45,7 +45,7 @@ public class PromotionTests
     {
         // Arrange
         var promotion = new Promotion("RPG Sale", "Desconto RPG", 20, GameGenre.RPG, DateTime.UtcNow, DateTime.UtcNow.AddDays(10));
-        var game = new Game("Final Fantasy", 100m, "descrição", [GameGenre.RPG]);
+        var game = Game.Create("Final Fantasy", 100m, "descrição", [GameGenre.RPG]);
 
         // Act
         var discountedPrice = promotion.CalculateDiscountedPrice(game);
@@ -59,7 +59,7 @@ public class PromotionTests
     {
         // Arrange
         var promotion = new Promotion("RPG Sale", "Desconto RPG",  20, GameGenre.RPG, DateTime.UtcNow, DateTime.UtcNow.AddDays(10));
-        var game = new Game("FIFA", 100m, "Descrição", [GameGenre.Sports]);
+        var game = Game.Create("FIFA", 100m, "Descrição", [GameGenre.Sports]);
 
         // Act
         var discountedPrice = promotion.CalculateDiscountedPrice(game);
@@ -73,7 +73,7 @@ public class PromotionTests
     {
         // Arrange
         var promotion = new Promotion("RPG Sale", "Desconto RPG", 20, GameGenre.RPG, DateTime.UtcNow.AddDays(-20), DateTime.UtcNow.AddDays(-10));
-        var game = new Game("Final Fantasy", 100m, "Descrição", [GameGenre.RPG]);
+        var game = Game.Create("Final Fantasy", 100m, "Descrição", [GameGenre.RPG]);
 
         // Act
         var discountedPrice = promotion.CalculateDiscountedPrice(game);

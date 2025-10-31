@@ -3,46 +3,49 @@ using Elastic.Clients.Elasticsearch.Core.MGet;
 using Elastic.Clients.Elasticsearch.QueryDsl;
 using FCG.Games.Domain.Entities;
 using FCG.Games.Domain.Interfaces;
+using FCG.Games.Infra.Data.Documents;
+using Microsoft.Extensions.Configuration;
 
 namespace FCG.Games.Infra.Data.Repository;
 
-public class ElasticsearchGameRepository(ElasticsearchClient client) : IGameRepository
+public class ElasticsearchGameRepository : IGameRepository
 {
-    private const string INDEX = "search-97tr";
+    private readonly ElasticsearchClient _client;
+    private readonly string _indexName;
+
+    public ElasticsearchGameRepository(ElasticsearchClient client, IConfiguration configuration)
+    {
+        _client = client;
+        _indexName = configuration["ElasticSearch:IndexName"] ?? "games";
+    }
 
     public async Task AddAsync(Game game)
     {
-        var response = await client.IndexAsync(game, i => i
-            .Index(INDEX)
+        var response = await _client.IndexAsync(game, i => i
+            .Index(_indexName)
             .Id(game.Id)
-            .OpType(OpType.Create));
+            .OpType(OpType.Create)
+        );
 
         if (!response.IsValidResponse)
         {
             var errorMessage = response.ElasticsearchServerError?.ToString() ?? response.DebugInformation;
-            throw new InvalidOperationException($"Falha ao indexar jogo em '{INDEX}': {errorMessage}");
+            throw new InvalidOperationException($"Falha ao indexar jogo em '{_indexName}': {errorMessage}");
         }
     }
     public async Task<Game?> GetByIdAsync(string id)
     {
-        var response = await client.GetAsync<Game>(id, g => g.Index(INDEX));
+        var response = await _client.GetAsync<GameDocument>(id, g => g.Index(_indexName));
         
         if (!response.IsValidResponse || response is null)
             return null;
 
-        return Game.Reconstruct(
-            response.Id,
-            response.Source!.Title,
-            response.Source.Price,
-            response.Source.Description,
-            response.Source.Genre,
-            response.Source.Popularity
-        );
+        return response.Source!.ToEntity(response.Id);
     }
     public async Task<IEnumerable<Game?>> GetGamesByIdsAsync(List<string> ids)
     {
-        var response = await client.MultiGetAsync<Game>(m => m
-        .Index(INDEX)
+        var response = await _client.MultiGetAsync<GameDocument>(m => m
+        .Index(_indexName)
         .Ids(ids.ToArray())
     );
 
@@ -50,21 +53,21 @@ public class ElasticsearchGameRepository(ElasticsearchClient client) : IGameRepo
             throw new Exception("GetGamesByIdsAsync falhou");
 
         return response.Docs
-            .OfType<MultiGetResponseItem<Game>>()
+            .OfType<MultiGetResponseItem<GameDocument>>()
             .Select(doc => doc.Match(
-                result => result.Source, _ => null))
+                result => result.Source.ToEntity(result.Id), _ => null))
             .Where(game => game != null)
             .ToList();
     }
     public async Task<List<Game>> GetGamesByGenreAsync(string genre, int page, int size, List<string>? excludeIds = null)
     {
-        var mustNotQueries = new List<Action<QueryDescriptor<Game>>>();
+        var mustNotQueries = new List<Action<QueryDescriptor<GameDocument>>>();
 
         if (excludeIds is not null)
             mustNotQueries.Add(mn => mn.Ids(i => i.Values(excludeIds.ToArray())));
 
-        var response = await client.SearchAsync<Game>(s => s
-            .Indices(INDEX)
+        var response = await _client.SearchAsync<GameDocument>(s => s
+            .Indices(_indexName)
             .From((page - 1) * size)
             .Size(size)
             .Query(q => q.Bool(b =>
@@ -84,12 +87,17 @@ public class ElasticsearchGameRepository(ElasticsearchClient client) : IGameRepo
         if (!response.IsValidResponse)
             throw new Exception("GetGamesByGenreAsync falhou");
 
-        return response.Documents.ToList();
+        var hitDictionary = response.Hits
+            .ToDictionary(h => h.Source!, h => h.Id);
+
+        return response.Documents
+        .Select(doc => doc.ToEntity(hitDictionary[doc]))
+        .ToList();
     }
     public async Task<IEnumerable<Game>> GetPaginatedAsync(int page, int size)
     {
-        var response = await client.SearchAsync<Game>(s => s
-                .Indices(INDEX)
+        var response = await _client.SearchAsync<GameDocument>(s => s
+                .Indices(_indexName)
                 .From((page - 1) * size)
                 .Size(size)
             );
@@ -100,20 +108,13 @@ public class ElasticsearchGameRepository(ElasticsearchClient client) : IGameRepo
             .ToDictionary(h => h.Source!, h => h.Id);
 
         return response.Documents
-            .Select(doc => Game.Reconstruct(
-                hitDictionary[doc],
-                doc.Title,
-                doc.Price,
-                doc.Description,
-                doc.Genre,
-                doc.Popularity
-            )
-        ).ToList();
+            .Select(doc => doc.ToEntity(hitDictionary[doc]))
+            .ToList();
     }
     public async Task<IEnumerable<Game>> GetMostPopularPaginatedAsync(int page, int size)
     {
-        var response = await client.SearchAsync<Game>(s => s
-                .Indices(INDEX)
+        var response = await _client.SearchAsync<GameDocument>(s => s
+                .Indices(_indexName)
                 .From((page - 1) * size)
                 .Size(size)
                 .Sort(sort => sort
@@ -127,20 +128,13 @@ public class ElasticsearchGameRepository(ElasticsearchClient client) : IGameRepo
             .ToDictionary(h => h.Source!, h => h.Id);
 
         return response.Documents
-            .Select(doc => Game.Reconstruct(
-                hitDictionary[doc],
-                doc.Title,
-                doc.Price,
-                doc.Description,
-                doc.Genre,
-                doc.Popularity
-            )
-        ).ToList();
+            .Select(doc => doc.ToEntity(hitDictionary[doc]))
+            .ToList();
     }
     public async Task<bool> TitleExistsAsync(string title)
     {
-        var response = await client.SearchAsync<Game>(s => s
-            .Indices(INDEX)
+        var response = await _client.SearchAsync<GameDocument>(s => s
+            .Indices(_indexName)
             .Size(0)
             .Query(q => q
                .Match(m => m.Field(f => f.Title).Query(title))
@@ -151,8 +145,8 @@ public class ElasticsearchGameRepository(ElasticsearchClient client) : IGameRepo
     }
     public async Task<bool> TitleExistsExcludingIdAsync(string title, string excludeId)
     {
-        var response = await client.SearchAsync<Game>(s => s
-            .Indices(INDEX)
+        var response = await _client.SearchAsync<GameDocument>(s => s
+            .Indices(_indexName)
             .Size(0)
             .Query(q => q
                 .Bool(b => b
@@ -173,8 +167,8 @@ public class ElasticsearchGameRepository(ElasticsearchClient client) : IGameRepo
     }
     public async Task UpdateAsync(string id, Game game)
     {
-        var response = await client.UpdateAsync<Game, Game>(
-            INDEX,
+        var response = await _client.UpdateAsync<Game, Game>(
+            _indexName,
             id,
             u => u.Doc(game)
         );
@@ -183,7 +177,7 @@ public class ElasticsearchGameRepository(ElasticsearchClient client) : IGameRepo
     }
     public async Task DeleteByIdAsync(string id)
     {
-        var response = await client.DeleteAsync(INDEX, id);
+        var response = await _client.DeleteAsync(_indexName, id);
     
         if (!response.IsValidResponse)
         {
@@ -195,7 +189,7 @@ public class ElasticsearchGameRepository(ElasticsearchClient client) : IGameRepo
     }
     public async Task DeleteAllAsync()
     {
-        var response = await client.DeleteByQueryAsync(INDEX, d => d
+        var response = await _client.DeleteByQueryAsync(_indexName, d => d
             .Query(q => q.MatchAll(new MatchAllQuery()))
             .Conflicts(Conflicts.Proceed)
             .Refresh(true)
@@ -205,7 +199,7 @@ public class ElasticsearchGameRepository(ElasticsearchClient client) : IGameRepo
         if (!response.IsValidResponse)
         {
             var errorMessage = response.ElasticsearchServerError?.ToString() ?? response.DebugInformation;
-            throw new InvalidOperationException($"Falha ao apagar documentos do índice '{INDEX}': {errorMessage}");
+            throw new InvalidOperationException($"Falha ao apagar documentos do índice '{_indexName}': {errorMessage}");
         }
     }
 }

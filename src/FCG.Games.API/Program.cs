@@ -7,10 +7,12 @@ using FCG.Games.Domain.Interfaces;
 using FCG.Games.Domain.Services;
 using FCG.Games.Infra.Data.Data;
 using FCG.Games.Infra.Data.Repository;
+using FCG.Games.Infra.Data.Seedings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
@@ -111,7 +113,9 @@ if (app.Environment.IsDevelopment() || app.Environment.IsStaging() || app.Enviro
     {
         await using var scope = app.Services.CreateAsyncScope();
         var elasticClient = scope.ServiceProvider.GetRequiredService<ElasticsearchClient>();
+        var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
         await ElasticSearchConfig.InitializeElasticsearchIndexAsync(elasticClient, "fcg-games");
+        await GameSeeding.SeedAsync(elasticClient, configuration);
         await using var dbContext = scope.ServiceProvider.GetRequiredService<FcgGameDbContext>();
         
     }

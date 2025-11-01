@@ -9,7 +9,7 @@ public class GameDocument
     public string Title { get; set; } = string.Empty;
     public decimal Price { get; set; }
     public string Description { get; set; } = string.Empty;
-    public List<GameGenre> Genre { get; set; }
+    public List<GameGenre> Genre { get; set; } = [];
     public int Popularity { get; set; }
 
     // Método para converter para a entidade de domínio

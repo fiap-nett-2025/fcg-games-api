@@ -9,21 +9,49 @@ services:
             - "1433:1433"
         networks:
             - fcg-network
+        healthcheck:
+            test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'FCG@admin' -C -Q 'SELECT 1' || exit 1"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+        volumes:
+            - sqlserver-data:/var/opt/mssql
+
+    elasticsearch:
+        image: docker.elastic.co/elasticsearch/elasticsearch:9.2.0
+        container_name: elasticsearch
+        environment:
+            - discovery.type=single-node
+            - xpack.security.enabled=false
+            - ES_JAVA_OPTS=-Xms512m -Xmx512m
+        ports:
+            - "9200:9200" 
+        volumes:
+            - elasticsearch-data:/usr/share/elasticsearch/data
+        networks:
+            - fcg-network
 
     fcg-game-api:
         build:
             context: .
-            dockerfile: ./src/FCG.Game.API/Dockerfile
+            dockerfile: ./src/FCG.Games.API/Dockerfile
         ports:
             - "5002:8080"
         depends_on:
-            - sqlserver
+            sqlserver:
+                condition: service_healthy
+            elasticsearch:
+                condition: service_started
         environment:
             ASPNETCORE_ENVIRONMENT: Development
-            ConnectionStrings__DefaultConnection: "Server=sqlserver;Initial Catalog=FCG_game;User Id=sa;Password=FCG@admin;TrustServerCertificate=true"
         networks:
             - fcg-network
+        restart: on-failure
 networks:
   fcg-network:
     external: true
+
+volumes:
+    elasticsearch-data:
+    sqlserver-data:
   

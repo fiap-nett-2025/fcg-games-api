@@ -117,6 +117,7 @@ if (app.Environment.IsDevelopment() || app.Environment.IsStaging() || app.Enviro
         await ElasticSearchConfig.InitializeElasticsearchIndexAsync(elasticClient, "fcg-games");
         await GameSeeding.SeedAsync(elasticClient, configuration);
         await using var dbContext = scope.ServiceProvider.GetRequiredService<FcgGameDbContext>();
+        await PromotionSeeding.SeedAsync(dbContext);
         
     }
     catch (Exception ex)

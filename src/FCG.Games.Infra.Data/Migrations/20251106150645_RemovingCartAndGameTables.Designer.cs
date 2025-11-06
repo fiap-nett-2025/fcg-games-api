@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infra.Migrations
 {
     [DbContext(typeof(FcgGameDbContext))]
-    [Migration("20250928150439_removing-cart-and-game-tables")]
-    partial class removingcartandgametables
+    [Migration("20251106150645_RemovingCartAndGameTables")]
+    partial class RemovingCartAndGameTables
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,7 +25,7 @@ namespace Infra.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("FCG.Game.Domain.Entities.Promotion", b =>
+            modelBuilder.Entity("FCG.Games.Domain.Entities.Promotion", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()

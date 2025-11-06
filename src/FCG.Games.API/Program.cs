@@ -112,13 +112,21 @@ if (app.Environment.IsDevelopment() || app.Environment.IsStaging() || app.Enviro
     try
     {
         await using var scope = app.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<FcgGameDbContext>();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+        logger.LogInformation("Aplicando migrações pendentes do banco de dados...");
+        await dbContext.Database.MigrateAsync();
+        logger.LogInformation("Migrações aplicadas com sucesso.");
+
         var elasticClient = scope.ServiceProvider.GetRequiredService<ElasticsearchClient>();
         var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+
         await ElasticSearchConfig.InitializeElasticsearchIndexAsync(elasticClient, "fcg-games");
         await GameSeeding.SeedAsync(elasticClient, configuration);
-        await using var dbContext = scope.ServiceProvider.GetRequiredService<FcgGameDbContext>();
         await PromotionSeeding.SeedAsync(dbContext);
-        
+
+        logger.LogInformation("Banco de dados criado e inicializado com sucesso.");
     }
     catch (Exception ex)
     {

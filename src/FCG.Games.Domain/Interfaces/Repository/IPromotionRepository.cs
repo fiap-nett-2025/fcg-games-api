@@ -1,7 +1,7 @@
 ﻿using FCG.Games.Domain.Entities;
 using System.Linq.Expressions;
 
-namespace FCG.Games.Domain.Interfaces;
+namespace FCG.Games.Domain.Interfaces.Repository;
 
 public interface IPromotionRepository
 {

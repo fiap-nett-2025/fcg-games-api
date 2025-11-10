@@ -1,5 +1,5 @@
 ﻿using FCG.Games.Domain.Entities;
-using FCG.Games.Domain.Interfaces;
+using FCG.Games.Domain.Interfaces.Repository;
 using FCG.Games.Infra.Data.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;

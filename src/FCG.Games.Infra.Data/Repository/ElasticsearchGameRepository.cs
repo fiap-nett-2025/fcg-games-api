@@ -2,7 +2,7 @@
 using Elastic.Clients.Elasticsearch.Core.MGet;
 using Elastic.Clients.Elasticsearch.QueryDsl;
 using FCG.Games.Domain.Entities;
-using FCG.Games.Domain.Interfaces;
+using FCG.Games.Domain.Interfaces.Repository;
 using FCG.Games.Infra.Data.Documents;
 using Microsoft.Extensions.Configuration;
 

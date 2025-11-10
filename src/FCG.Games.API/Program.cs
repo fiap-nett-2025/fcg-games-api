@@ -4,6 +4,7 @@ using FCG.Games.Application.Interfaces;
 using FCG.Games.Application.Middlewares;
 using FCG.Games.Application.Services;
 using FCG.Games.Domain.Interfaces;
+using FCG.Games.Domain.Interfaces.Repository;
 using FCG.Games.Domain.Services;
 using FCG.Games.Infra.Data.Data;
 using FCG.Games.Infra.Data.Repository;

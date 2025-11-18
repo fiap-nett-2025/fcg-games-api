@@ -3,10 +3,10 @@ using Elastic.Clients.Elasticsearch.Core.MGet;
 using Elastic.Clients.Elasticsearch.QueryDsl;
 using FCG.Games.Domain.Entities;
 using FCG.Games.Domain.Interfaces.Repository;
-using FCG.Games.Infra.Data.Documents;
+using FCG.Games.Infra.Persistence.Documents;
 using Microsoft.Extensions.Configuration;
 
-namespace FCG.Games.Infra.Data.Repository;
+namespace FCG.Games.Infra.Persistence.Repository;
 
 public class ElasticsearchGameRepository : IGameRepository
 {

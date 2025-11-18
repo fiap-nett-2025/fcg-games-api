@@ -2,7 +2,7 @@
 using FCG.Games.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
-namespace FCG.Games.Infra.Data.Data;
+namespace FCG.Games.Infra.Persistence.Data;
 
 public class FcgGameDbContext(DbContextOptions<FcgGameDbContext> options) : DbContext(options)
 {

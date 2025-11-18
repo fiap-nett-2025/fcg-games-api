@@ -1,10 +1,10 @@
 ﻿using FCG.Games.Domain.Entities;
 using FCG.Games.Domain.Interfaces.Repository;
-using FCG.Games.Infra.Data.Data;
+using FCG.Games.Infra.Persistence.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
-namespace FCG.Games.Infra.Data.Repository;
+namespace FCG.Games.Infra.Persistence.Repository;
 
 public class PromotionRepository(FcgGameDbContext context) : IPromotionRepository
 {

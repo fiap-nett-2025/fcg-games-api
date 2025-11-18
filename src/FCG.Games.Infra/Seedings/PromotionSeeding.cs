@@ -1,9 +1,9 @@
 ﻿using FCG.Games.Domain.Entities;
 using FCG.Games.Domain.Enums;
-using FCG.Games.Infra.Data.Data;
+using FCG.Games.Infra.Persistence.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace FCG.Games.Infra.Data.Seedings;
+namespace FCG.Games.Infra.Seedings;
 
 public class PromotionSeeding
 {

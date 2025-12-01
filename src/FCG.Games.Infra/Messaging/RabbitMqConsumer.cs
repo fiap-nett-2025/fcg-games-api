@@ -6,9 +6,9 @@ using System.Text.Json;
 
 namespace FCG.Games.Infra.Messaging
 {
-    public class RabbitMqConsumer(ConnectionFactory factory) : IQueueConsumer
+    public class RabbitMqConsumer<T>(ConnectionFactory factory) : IQueueConsumer<T> 
     {
-        public async Task StartAsync<T>(string queueName, IMessageHandler<T> handler,
+        public async Task StartAsync(string queueName, IMessageHandler<T> handler,
             CancellationToken cancellationToken = default)
         {
             using IConnection connection = await factory.CreateConnectionAsync(cancellationToken);
@@ -31,9 +31,8 @@ namespace FCG.Games.Infra.Messaging
                     var json = Encoding.UTF8.GetString(body);
                     var message = JsonSerializer.Deserialize<T>(json)
                         ?? throw new InvalidOperationException("Failed to deserialize message");
-
                     await handler.HandleAsync(message, cancellationToken);
-                    await channel.BasicAckAsync(ea.DeliveryTag, multiple: false);
+                    await channel.BasicAckAsync( ea.DeliveryTag, multiple: false);
                 }
                 catch (Exception)
                 {

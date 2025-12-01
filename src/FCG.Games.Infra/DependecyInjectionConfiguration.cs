@@ -63,8 +63,6 @@ public static class DependecyInjectionConfiguration
 
             return factory;
         });
-
-        services.AddTransient<IQueueConsumer, RabbitMqConsumer>();
     }
 
     public static void ConfigureElasticsearch(this IServiceCollection services)

@@ -1,6 +1,10 @@
-﻿using FCG.Games.Application.Interfaces;
+﻿using FCG.Games.Application.DTOs;
+using FCG.Games.Application.Handler;
+using FCG.Games.Application.Interfaces;
 using FCG.Games.Application.Services;
+using FCG.Games.Domain.Interfaces.Messaging;
 using FCG.Games.Domain.Interfaces.Repository;
+using FCG.Games.Infra.Messaging;
 using FCG.Games.Infra.Persistence.Repository;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

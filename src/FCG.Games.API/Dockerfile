@@ -34,7 +34,7 @@ WORKDIR /src
 COPY ["src/FCG.Games.API/FCG.Games.API.csproj", "src/FCG.Games.API/"]
 COPY ["src/FCG.Games.Application/FCG.Games.Application.csproj", "src/FCG.Games.Application/"]
 COPY ["src/FCG.Games.Domain/FCG.Games.Domain.csproj", "src/FCG.Games.Domain/"]
-COPY ["src/FCG.Games.Infra.Data/FCG.Games.Infra.Data.csproj", "src/FCG.Games.Infra.Data/"]
+COPY ["src/FCG.Games.Infra/FCG.Games.Infra.csproj", "src/FCG.Games.Infra/"]
 RUN dotnet restore "./src/FCG.Games.API/FCG.Games.API.csproj"
 COPY . .
 WORKDIR "/src/src/FCG.Games.API"

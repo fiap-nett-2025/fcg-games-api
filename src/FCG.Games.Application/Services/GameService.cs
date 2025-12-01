@@ -2,8 +2,8 @@
 using FCG.Games.Application.DTOs;
 using FCG.Games.Application.Interfaces;
 using FCG.Games.Domain.Entities;
-using FCG.Games.Domain.Interfaces;
 using FCG.Games.Application.Mappers;
+using FCG.Games.Domain.Interfaces.Repository;
 
 namespace FCG.Games.Application.Services
 {

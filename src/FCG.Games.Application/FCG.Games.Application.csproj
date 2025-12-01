@@ -17,7 +17,7 @@
   <ItemGroup>
     <ProjectReference Include="..\FCG.Games.Domain\FCG.Games.Domain.csproj" />
     <ProjectReference Include="..\FCG.Games.Domain\FCG.Games.Domain.csproj" />
-    <ProjectReference Include="..\FCG.Games.Infra.Data\FCG.Games.Infra.Data.csproj" />
+    <ProjectReference Include="..\FCG.Games.Infra\FCG.Games.Infra.csproj" />
   </ItemGroup>
 
 </Project>

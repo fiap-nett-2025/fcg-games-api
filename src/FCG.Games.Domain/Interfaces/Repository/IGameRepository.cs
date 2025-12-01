@@ -1,6 +1,6 @@
 ﻿using FCG.Games.Domain.Entities;
 
-namespace FCG.Games.Domain.Interfaces;
+namespace FCG.Games.Domain.Interfaces.Repository;
 
 public interface IGameRepository
 {

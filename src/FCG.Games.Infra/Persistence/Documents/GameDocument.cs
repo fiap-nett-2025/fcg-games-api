@@ -1,7 +1,7 @@
 ﻿using FCG.Games.Domain.Entities;
 using FCG.Games.Domain.Enums;
 
-namespace FCG.Games.Infra.Data.Documents;
+namespace FCG.Games.Infra.Persistence.Documents;
 
 public class GameDocument
 {

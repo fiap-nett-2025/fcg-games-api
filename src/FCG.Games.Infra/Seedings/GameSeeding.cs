@@ -5,7 +5,7 @@ using FCG.Games.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
-namespace FCG.Games.Infra.Data.Seedings;
+namespace FCG.Games.Infra.Seedings;
 
 public class GameSeeding
 {

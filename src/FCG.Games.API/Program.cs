@@ -1,12 +1,8 @@
 ﻿using Elastic.Clients.Elasticsearch;
 using FCG.Games.API.Configurations;
 using FCG.Games.Application;
-using FCG.Games.Application.Interfaces;
 using FCG.Games.Application.Middlewares;
-using FCG.Games.Application.Services;
 using FCG.Games.Infra;
-using FCG.Games.Infra.Config;
-using FCG.Games.Infra.Messaging.Config;
 using FCG.Games.Infra.Persistence.Config;
 using FCG.Games.Infra.Persistence.Data;
 using FCG.Games.Infra.Seedings;
@@ -79,27 +75,6 @@ internal class Program
         builder.Services.ConfigureSQLServer();
         #endregion
 
-        #region RabbitMq
-        var rabbitSection = builder.Configuration.GetSection("RabbitMq");
-
-        var rabbitSettingsSection = rabbitSection.GetSection("Settings");
-        if (!rabbitSettingsSection.Exists())
-            throw new InvalidOperationException("Section 'RabbitMqSettings' not found in configuration");
-        builder.Services.Configure<RabbitMqOptions>(rabbitSettingsSection);
-
-        var exchangeSection = rabbitSection.GetSection("Exchanges");
-        if (!exchangeSection.Exists())
-            throw new InvalidOperationException("Section 'Exchanges' not found in configuration.");
-        builder.Services.Configure<ExchangesOptions>(exchangeSection);
-
-        var queueSection = rabbitSection.GetSection("Queues");
-        if (!queueSection.Exists())
-            throw new InvalidOperationException("Section 'Queues' not found in configuration.");
-        builder.Services.Configure<QueuesOptions>(queueSection);
-
-        builder.Services.ConfigureRabbitMq();
-        #endregion
-
         #region API clients
         var apiSection = builder.Configuration.GetSection("ClientAPI");
         if (!apiSection.Exists())
@@ -119,20 +94,6 @@ internal class Program
 
         builder.Services.ConfigureServices();
         #endregion
-
-
-        // ✅ Serviços
-
-
-
-        //builder.Services.AddScoped<IPromotionRepository, PromotionRepository>();
-        //builder.Services.AddScoped<IGameRepository, ElasticsearchGameRepository>();
-        //builder.Services.AddScoped<IGameRecommendationService, RecommendationService>();
-        //builder.Services.AddScoped<IUserLibraryClient, UserLibraryClient>();
-        //builder.Services.AddScoped<IPromotionService, PromotionService>();
-        //builder.Services.AddScoped<IPricingService, PricingService>();
-        //builder.Services.AddHttpClient();
-
 
         builder.Logging.AddJsonConsole();
 

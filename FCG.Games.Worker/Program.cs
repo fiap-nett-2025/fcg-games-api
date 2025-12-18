@@ -3,7 +3,6 @@ using FCG.Games.Application.DTOs;
 using FCG.Games.Application.Handler;
 using FCG.Games.Domain.Interfaces.Messaging;
 using FCG.Games.Infra;
-using FCG.Games.Infra.Config;
 using FCG.Games.Infra.Messaging;
 using FCG.Games.Infra.Messaging.Config;
 using FCG.Games.Infra.Persistence.Config;
@@ -42,9 +41,9 @@ builder.Services.ConfigureRabbitMq();
 
 builder.Services.ConfigureServices();
 builder.Services.ConfigureHttpClients(builder.Configuration.GetSection("ClientAPI"));
-builder.Services.AddScoped<IMessageHandler<MessageDTO>, GameIncreasePopularityHandler>();
-builder.Services.AddScoped<IQueueConsumer<MessageDTO>, RabbitMqConsumer<MessageDTO>>();
 builder.Services.AddHostedService<GamePopularityConsumerWorker>();
+builder.Services.AddTransient<IMessageHandler<MessageDTO>, GameIncreasePopularityHandler>();
+builder.Services.AddSingleton<IQueueConsumer<MessageDTO>, RabbitMqConsumer<MessageDTO>>();
 
 var host = builder.Build();
 host.Run();

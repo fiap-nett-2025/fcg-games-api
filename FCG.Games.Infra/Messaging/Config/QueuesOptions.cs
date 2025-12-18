@@ -1,4 +1,4 @@
-﻿namespace FCG.Games.Infra.Config;
+﻿namespace FCG.Games.Infra.Messaging.Config;
 
 public class QueuesOptions
 {

@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\FCG.Games.Domain\FCG.Games.Domain.csproj" />
+    <ProjectReference Include="..\FCG.Games.Domain\FCG.Games.Domain.csproj" />
   </ItemGroup>
 
   <ItemGroup>

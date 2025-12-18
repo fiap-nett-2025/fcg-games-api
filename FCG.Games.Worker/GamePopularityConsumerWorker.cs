@@ -1,6 +1,6 @@
 using FCG.Games.Application.DTOs;
 using FCG.Games.Domain.Interfaces.Messaging;
-using FCG.Games.Infra.Config;
+using FCG.Games.Infra.Messaging.Config;
 using Microsoft.Extensions.Options;
 
 namespace FCG.Games.Worker;

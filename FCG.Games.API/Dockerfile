@@ -31,10 +31,10 @@ RUN apt-get update && \
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["FCG.Games.API/FCG.Games.API.csproj", "src/FCG.Games.API/"]
-COPY ["FCG.Games.Application/FCG.Games.Application.csproj", "src/FCG.Games.Application/"]
-COPY ["FCG.Games.Domain/FCG.Games.Domain.csproj", "src/FCG.Games.Domain/"]
-COPY ["FCG.Games.Infra/FCG.Games.Infra.csproj", "src/FCG.Games.Infra/"]
+COPY ["FCG.Games.API/FCG.Games.API.csproj", "FCG.Games.API/"]
+COPY ["FCG.Games.Application/FCG.Games.Application.csproj", "FCG.Games.Application/"]
+COPY ["FCG.Games.Domain/FCG.Games.Domain.csproj", "FCG.Games.Domain/"]
+COPY ["FCG.Games.Infra/FCG.Games.Infra.csproj", "FCG.Games.Infra/"]
 RUN dotnet restore "./FCG.Games.API/FCG.Games.API.csproj"
 COPY . .
 WORKDIR "/src/FCG.Games.API"

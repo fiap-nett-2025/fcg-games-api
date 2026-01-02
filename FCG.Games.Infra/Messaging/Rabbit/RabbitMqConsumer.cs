@@ -6,9 +6,9 @@ using System.Text.Json;
 
 namespace FCG.Games.Infra.Messaging
 {
-    public class RabbitMqConsumer<T>(ConnectionFactory factory) : IQueueConsumer<T> 
+    public class RabbitMqConsumer(ConnectionFactory factory) : IQueueConsumer<T> 
     {
-        public async Task StartAsync(string queueName, IMessageHandler<T> handler,
+        public async Task StartAsync<T>(string queueName, IMessageHandler<T> handler,
             CancellationToken cancellationToken = default)
         {
             using IConnection connection = await factory.CreateConnectionAsync(cancellationToken);

@@ -1,6 +1,7 @@
 ﻿namespace FCG.Games.Domain.Interfaces.Messaging;
 
-public interface IQueueConsumer<T>
+public interface IQueueConsumer
 {
-    Task StartAsync(string queueName, IMessageHandler<T> handler, CancellationToken cancellationToken = default);
+    Task StartAsync<T>(string queueName, IMessageHandler<T> handler,
+        CancellationToken cancellationToken = default);
 }

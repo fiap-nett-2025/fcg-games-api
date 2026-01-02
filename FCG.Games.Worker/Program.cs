@@ -32,10 +32,10 @@ if (!exchangeSection.Exists())
     throw new InvalidOperationException("Section 'Exchanges' not found in configuration.");
 builder.Services.Configure<ExchangesOptions>(exchangeSection);
 
-var queueSection = rabbitSection.GetSection("Queues");
-if (!queueSection.Exists())
+var queuesSectionRabbit = rabbitSection.GetSection("Queues");
+if (!queuesSectionRabbit.Exists())
     throw new InvalidOperationException("Section 'Queues' not found in configuration.");
-builder.Services.Configure<QueuesOptions>(queueSection);
+builder.Services.Configure<QueuesOptions>(queuesSectionRabbit);
 builder.Services.ConfigureRabbitMq();
 #endregion
 

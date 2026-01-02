@@ -8,6 +8,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
+using Amazon.SQS;
+using Microsoft.Extensions.Configuration;
 
 namespace FCG.Games.Infra;
 

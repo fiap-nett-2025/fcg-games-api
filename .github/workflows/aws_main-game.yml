@@ -1,0 +1,85 @@
+name: Pipeline CI/CD (AWS)
+
+on:
+  push:
+    branches: [ "main" ]
+
+env:
+    FCG_API_NAME: fcg-games-api
+    FCG_API_DOCKERFILE: ./FCG.Games.API/Dockerfile
+jobs:
+  test:
+    name: Running Tests
+    runs-on: ubuntu-latest
+    steps:
+    
+      - name: Download source
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Dependency Restore
+        run: dotnet restore
+
+      - name: Build with dotnet
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Domain Tests
+        run: dotnet test ./FCG.Games.Tests.Domain/FCG.Games.Tests.Domain.csproj --configuration Release --no-build --verbosity normal
+
+  deploy:
+    name: Deploy to Production
+    needs: test
+    if: success()
+    runs-on: ubuntu-latest
+    permissions: 
+      id-token: write #This is required for requesting the OIDC JWT Token
+      contents: read #Required when GH token is used to authenticate with private repo
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    # Login na AWS
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
+    # Login no ECR
+    - name: Login to Amazon ECR
+      uses: aws-actions/amazon-ecr-login@v2
+
+    # Build & Push da API
+    - name: Build and push API image
+      run: |
+        docker build -t ${{env.FCG_API_NAME}} -f ${{env.FCG_API_DOCKERFILE}} .
+        docker tag ${{env.FCG_API_NAME}}:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{env.FCG_API_NAME}}:latest
+        docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{env.FCG_API_NAME}}:latest
+
+    # Configura kubectl para EKS
+    - name: Update kubeconfig
+      run: |
+        aws eks update-kubeconfig \
+          --name ${{ secrets.EKS_CLUSTER_NAME }} \
+          --region ${{ secrets.AWS_REGION }}
+    
+    - name: Render Kubernetes manifest
+      env:
+        AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+        AWS_REGION: ${{ secrets.AWS_REGION }}
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        mkdir -p rendered
+        envsubst < k8s/games-api-deployment.yaml > rendered/games-api-deployment.yaml
+        envsubst < k8s/games-api-service-account.yaml > rendered/games-api-service-account.yaml
+
+    # Deploy no Kubernetes
+    - name: Apply Kubernetes manifests
+      run: |
+        kubectl apply -f rendered/

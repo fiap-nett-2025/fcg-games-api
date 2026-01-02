@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fcg-games-config
+data:
+  API__GamesApiBaseUrl: "https://fcg-game-api.whitesea-88353420.westus2.azurecontainerapps.io"
+  API__UsersApiBaseUrl: "https://fcg-user-api.whitesea-88353420.westus2.azurecontainerapps.io"
+  API__PaymentGatewayBaseUrl: "https://payment-gateway-hjgsdacahzdmazdc.canadacentral-01.azurewebsites.net"

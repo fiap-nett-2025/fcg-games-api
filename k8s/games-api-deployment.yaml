@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fcg-games-api
+  labels:
+    app: fcg-games-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fcg-games-api
+  template:
+    metadata:
+      labels:
+        app: fcg-games-api
+    spec:
+      serviceAccountName: fcg-games-sa
+      volumes:
+        - name: secrets-store
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: fcg-api-aws-secrets
+      containers:
+        - name: fcg-games-api
+          image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/fcg-games-api:${IMAGE_TAG}
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: secrets-store
+              mountPath: /mnt/secrets
+              readOnly: true
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              value: "Production"
+          envFrom:
+            - secretRef:
+                name: fcg-games-secrets
+            - configMapRef:
+                name: fcg-games-config
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"

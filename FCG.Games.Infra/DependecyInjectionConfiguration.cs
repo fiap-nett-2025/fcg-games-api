@@ -34,6 +34,7 @@ public static class DependecyInjectionConfiguration
         }, ServiceLifetime.Scoped);
     }
 
+    //RabbitMq
     public static void ConfigureRabbitMq(this IServiceCollection services)
     {
         services.AddSingleton(sp =>
@@ -75,5 +76,13 @@ public static class DependecyInjectionConfiguration
                 .DefaultIndex(settings.IndexName);
             return new ElasticsearchClient(connectionSettings);
         });
+    }
+
+    //Amazon SQS
+    public static IServiceCollection ConfigureAmazonSQS(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddDefaultAWSOptions(configuration.GetAWSOptions());
+        services.AddAWSService<IAmazonSQS>();
+        return services;
     }
 }

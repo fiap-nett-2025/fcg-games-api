@@ -19,7 +19,7 @@ builder.Services.Configure<ElasticsearchOptions>(elasticsearchSection);
 builder.Services.ConfigureElasticsearch();
 #endregion
 
-#region RabbitMQ Configuration
+#region RabbitMQ Configuration (NOT USED)
 var rabbitSection = builder.Configuration.GetSection("RabbitMq");
 
 var rabbitSettingsSection = rabbitSection.GetSection("Settings");
@@ -37,6 +37,17 @@ if (!queueSection.Exists())
     throw new InvalidOperationException("Section 'Queues' not found in configuration.");
 builder.Services.Configure<QueuesOptions>(queueSection);
 builder.Services.ConfigureRabbitMq();
+#endregion
+
+#region Amazon SQS
+var messagingSection = builder.Configuration.GetSection("Messaging");
+if (!messagingSection.Exists())
+    throw new InvalidOperationException("Section 'Messaging' not found in configuration.");
+
+var queuesSection = messagingSection.GetSection("Queues");
+builder.Services.Configure<QueuesOptions>(queuesSection);
+
+builder.Services.ConfigureAmazonSQS(builder.Configuration);
 #endregion
 
 builder.Services.ConfigureServices();

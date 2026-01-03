@@ -7,7 +7,6 @@ namespace FCG.Games.Worker;
 
 public class GamePopularityConsumerWorker : BackgroundService
 {
-    {
     private readonly IQueueConsumer _consumer;                
     private readonly IMessageHandler<MessageDTO> _handler;
     private readonly QueuesOptions _queues;

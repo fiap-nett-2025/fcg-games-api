@@ -7,12 +7,13 @@ namespace FCG.Games.Worker;
 
 public class GamePopularityConsumerWorker : BackgroundService
 {
-    private readonly IQueueConsumer<MessageDTO> _consumer;
+    {
+    private readonly IQueueConsumer _consumer;                
     private readonly IMessageHandler<MessageDTO> _handler;
     private readonly QueuesOptions _queues;
 
     public GamePopularityConsumerWorker(
-        IQueueConsumer<MessageDTO> consumer,
+        IQueueConsumer consumer,                            
         IMessageHandler<MessageDTO> handler,
         IOptions<QueuesOptions> queuesOptions)
     {
@@ -28,4 +29,5 @@ public class GamePopularityConsumerWorker : BackgroundService
             _handler,
             stoppingToken);
     }
+}
 }

@@ -55,6 +55,7 @@ builder.Services.ConfigureHttpClients(builder.Configuration.GetSection("ClientAP
 builder.Services.AddHostedService<GamePopularityConsumerWorker>();
 builder.Services.AddTransient<IMessageHandler<MessageDTO>, GameIncreasePopularityHandler>();
 //builder.Services.AddSingleton<IQueueConsumer<MessageDTO>, RabbitMqConsumer<MessageDTO>>();
+builder.Services.AddTransient<IQueueConsumer, AmazonSqsConsumer>();
 
 var host = builder.Build();
 host.Run();

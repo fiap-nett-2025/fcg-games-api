@@ -54,7 +54,7 @@ builder.Services.ConfigureServices();
 builder.Services.ConfigureHttpClients(builder.Configuration.GetSection("ClientAPI"));
 builder.Services.AddHostedService<GamePopularityConsumerWorker>();
 builder.Services.AddTransient<IMessageHandler<MessageDTO>, GameIncreasePopularityHandler>();
-builder.Services.AddSingleton<IQueueConsumer<MessageDTO>, RabbitMqConsumer<MessageDTO>>();
+//builder.Services.AddSingleton<IQueueConsumer<MessageDTO>, RabbitMqConsumer<MessageDTO>>();
 
 var host = builder.Build();
 host.Run();

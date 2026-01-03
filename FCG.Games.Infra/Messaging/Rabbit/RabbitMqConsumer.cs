@@ -6,7 +6,7 @@ using System.Text.Json;
 
 namespace FCG.Games.Infra.Messaging
 {
-    public class RabbitMqConsumer(ConnectionFactory factory) : IQueueConsumer<T> 
+    public class RabbitMqConsumer(ConnectionFactory factory) : IQueueConsumer 
     {
         public async Task StartAsync<T>(string queueName, IMessageHandler<T> handler,
             CancellationToken cancellationToken = default)

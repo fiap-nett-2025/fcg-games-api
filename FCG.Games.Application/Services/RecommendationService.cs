@@ -30,7 +30,7 @@ public class RecommendationService(IGameRepository gameRepository, IUserLibraryC
     private string? AnalyzeMostFrequentGenre(IEnumerable<Game?> games)
     {
         return games
-            .SelectMany(g => g.Genre.Select(genre => genre.ToString()))
+            .SelectMany(g => g.Genres.Select(genre => genre.ToString()))
             .GroupBy(g => g)
             .OrderByDescending(g => g.Count())
             .ThenBy(g => g.Key)

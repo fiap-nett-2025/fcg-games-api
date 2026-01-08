@@ -45,7 +45,7 @@ namespace FCG.Games.API.Configurations
                             .Text(t => t.Title, td => td.Fields(f => f.Keyword("keyword")))
                             .FloatNumber(f => f.Price)
                             .Text(t => t.Description)
-                            .Keyword(k => k.Genre)
+                            .Keyword(k => k.Genres)
                             .IntegerNumber(i => i.Popularity)
                         )
                     )

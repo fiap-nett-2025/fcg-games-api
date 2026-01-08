@@ -14,7 +14,7 @@ namespace FCG.Games.Application.Services
             if (await repository.TitleExistsAsync(dto.Title))
                 throw new BusinessErrorDetailsException($"Já existe um jogo com o título '{dto.Title}'.");
 
-            var game = Game.Create(dto.Title, dto.Price, dto.Description, dto.Genre);
+            var game = Game.Create(dto.Title, dto.Price, dto.Description, dto.Genres);
 
             await repository.AddAsync(game);
 
@@ -44,7 +44,7 @@ namespace FCG.Games.Application.Services
             game.UpdateTitle(dto.Title ?? game.Title);
             game.UpdatePrice(dto.Price ?? game.Price);
             game.UpdateDescription(dto.Description ?? game.Description);
-            game.UpdateGenre(dto.Genre ?? game.Genre);
+            game.UpdateGenre(dto.Genres ?? game.Genres);
 
             if (await repository.TitleExistsExcludingIdAsync(game.Title, game.Id))
                 throw new BusinessErrorDetailsException($"Já existe um jogo com o título '{game.Title}'.");

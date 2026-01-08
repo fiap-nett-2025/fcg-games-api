@@ -8,7 +8,7 @@ public class PricingService : IPricingService
     public decimal CalculateFinalPrice(Game game, IEnumerable<Promotion> activePromotions)
     {
         var applicablePromotions = activePromotions
-            .Where(p => p.IsActive() && game.Genre.Contains(p.TargetGenre));
+            .Where(p => p.IsActive() && game.Genres.Contains(p.TargetGenre));
 
         if (!applicablePromotions.Any())
         {

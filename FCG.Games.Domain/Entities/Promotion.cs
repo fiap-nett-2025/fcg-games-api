@@ -35,7 +35,7 @@ public class Promotion
     public decimal CalculateDiscountedPrice(Game game)
     {
         if (!IsActive()) return game.Price;
-        if (!game.Genre.Contains(TargetGenre)) return game.Price;
+        if (!game.Genres.Contains(TargetGenre)) return game.Price;
         return game.Price * (1 - DiscountPercentage / 100m);
     }
 

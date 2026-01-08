@@ -11,7 +11,7 @@ namespace FCG.Games.Application.Mappers
             Id = game.Id,
             Title = game.Title,
             Description = game.Description,
-            Genre = game.Genre,
+            Genres = game.Genres,
             Price = game.Price,
             Popularity = game.Popularity
         };
@@ -22,7 +22,7 @@ namespace FCG.Games.Application.Mappers
                 Id = game.Id,
                 Title = game.Title,
                 Description = game.Description,
-                Genre = game.Genre,
+                Genres = game.Genres,
                 Price = game.Price,
                 Popularity = game.Popularity
             });
@@ -32,7 +32,7 @@ namespace FCG.Games.Application.Mappers
                 Id = game.Id,
                 Title = game.Source!.Title,
                 Description = game.Source.Description,
-                Genre = game.Source.Genre,
+                Genres = game.Source.Genres,
                 Price = game.Source.Price,
                 Popularity = game.Source.Popularity
             });

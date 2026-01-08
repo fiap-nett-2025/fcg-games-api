@@ -9,7 +9,7 @@ public class Game
     public string Title { get; private set; } = null!;
     public decimal Price { get; private set; }
     public string Description { get; private set; } = null!;
-    public List<GameGenre> Genre { get; private set; } = [];
+    public List<GameGenre> Genres { get; private set; } = [];
     public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
     public long Popularity { get; private set; }
 
@@ -18,7 +18,7 @@ public class Game
         Title = title;
         Price = price;
         Description = description;
-        Genre = genre;
+        Genres = genre;
     }
 
     public static Game Create(string title, decimal price, string description, List<GameGenre> genre)
@@ -84,7 +84,7 @@ public class Game
     public void UpdateGenre(List<GameGenre> genre)
     {
         ValidateGenreList(genre);
-        Genre = genre;
+        Genres = genre;
     }
 
     public void IncrementPopularity()

@@ -15,7 +15,7 @@ public class GameTests
         Assert.Equal("Test Game", game.Title);
         Assert.Equal(0.99m, game.Price);
         Assert.Equal("descricao", game.Description);
-        Assert.Single(game.Genre);
+        Assert.Single(game.Genres);
     }
 
     [Theory]

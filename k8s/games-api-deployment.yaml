@@ -14,29 +14,21 @@ spec:
       labels:
         app: fcg-games-api
     spec:
-      serviceAccountName: fcg-games-sa
-      volumes:
-        - name: secrets-store
-          csi:
-            driver: secrets-store.csi.k8s.io
-            readOnly: true
-            volumeAttributes:
-              secretProviderClass: fcg-api-aws-secrets
       containers:
         - name: fcg-games-api
-          image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/fcg-games-api:${IMAGE_TAG}
+          image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/fcg-games-api:latest
           ports:
-            - containerPort: 80
-          volumeMounts:
-            - name: secrets-store
-              mountPath: /mnt/secrets
-              readOnly: true
+            - containerPort: 8080
           env:
             - name: ASPNETCORE_ENVIRONMENT
               value: "Production"
+            - name: AWS_REGION
+              value: "${AWS_REGION}"
+            - name: AWS_DEFAULT_REGION
+              value: "${AWS_REGION}"
           envFrom:
             - secretRef:
-                name: fcg-games-secrets
+                name: aws-credentials
             - configMapRef:
                 name: fcg-games-config
           resources:

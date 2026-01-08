@@ -1,4 +1,5 @@
 ﻿using Elastic.Clients.Elasticsearch;
+using FCG.Games.API;
 using FCG.Games.API.Configurations;
 using FCG.Games.Application;
 using FCG.Games.Application.Middlewares;
@@ -93,6 +94,9 @@ internal class Program
         #endregion
 
         builder.Services.ConfigureServices();
+
+        // ✅ Worker
+        builder.Services.AddHostedService<GamePopularityConsumerWorker>();
         #endregion
 
         builder.Logging.AddJsonConsole();
@@ -148,22 +152,3 @@ internal class Program
         app.Run();
     }
 }
-
-#region Swagger
-
-#endregion
-#region JWT Authentication
-
-#endregion
-#region Dependency Injection
-#region SQL Server
-
-#endregion
-#region RabbitMq
-
-#endregion
-#region API clients
-
-#endregion
-
-#endregion

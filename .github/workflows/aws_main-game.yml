@@ -28,8 +28,7 @@ jobs:
         run: dotnet build --configuration Release --no-restore
 
       - name: Domain Tests
-        run: dotnet test ./FCG.Games.Tests.Domain/FCG.Games.Tests.Domain.csproj --configuration Release --no-build --verbosity normal
-
+        run: dotnet test ./FCG.Game.Tests.Domain/FCG.Game.Tests.Domain.csproj --configuration Release --no-build --verbosity normal
   deploy:
     name: Deploy to Production
     needs: test
@@ -49,7 +48,7 @@ jobs:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-        aws-region: ${{ secrets.AWS_REGION }}
+        aws-region: ${{ vars.AWS_REGION }}
 
     # Login no ECR
     - name: Login to Amazon ECR
@@ -59,25 +58,26 @@ jobs:
     - name: Build and push API image
       run: |
         docker build -t ${{env.FCG_API_NAME}} -f ${{env.FCG_API_DOCKERFILE}} .
-        docker tag ${{env.FCG_API_NAME}}:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{env.FCG_API_NAME}}:latest
-        docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{env.FCG_API_NAME}}:latest
+        docker tag ${{env.FCG_API_NAME}}:latest ${{ vars.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com/${{env.FCG_API_NAME}}:latest
+        docker push ${{ vars.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com/${{env.FCG_API_NAME}}:latest
 
     # Configura kubectl para EKS
     - name: Update kubeconfig
       run: |
         aws eks update-kubeconfig \
-          --name ${{ secrets.EKS_CLUSTER_NAME }} \
-          --region ${{ secrets.AWS_REGION }}
+          --name ${{ vars.EKS_CLUSTER_NAME }} \
+          --region ${{ vars.AWS_REGION }}
     
     - name: Render Kubernetes manifest
       env:
-        AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-        AWS_REGION: ${{ secrets.AWS_REGION }}
+        AWS_ACCOUNT_ID: ${{ vars.AWS_ACCOUNT_ID }}
+        AWS_REGION: ${{ vars.AWS_REGION }}
         IMAGE_TAG: ${{ github.sha }}
       run: |
         mkdir -p rendered
         envsubst < k8s/games-api-deployment.yaml > rendered/games-api-deployment.yaml
-        envsubst < k8s/games-api-service-account.yaml > rendered/games-api-service-account.yaml
+        cp k8s/games-api-config.yaml rendered/games-api-config.yaml
+        cp k8s/games-api-service.yaml rendered/games-api-service.yaml
 
     # Deploy no Kubernetes
     - name: Apply Kubernetes manifests

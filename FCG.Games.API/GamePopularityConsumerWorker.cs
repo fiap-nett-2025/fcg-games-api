@@ -3,7 +3,7 @@ using FCG.Games.Domain.Interfaces.Messaging;
 using FCG.Games.Infra.Messaging.Config;
 using Microsoft.Extensions.Options;
 
-namespace FCG.Games.Worker;
+namespace FCG.Games.API;
 
 public class GamePopularityConsumerWorker : BackgroundService
 {

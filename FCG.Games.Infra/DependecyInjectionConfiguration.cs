@@ -21,18 +21,7 @@ public static class DependecyInjectionConfiguration
         {
             var settings = sp.GetRequiredService<IOptions<SqlServerOptions>>().Value;
 
-            options.UseSqlServer(
-                settings.ConnectionStrings,
-                sqlOptions =>
-                {
-                    if (settings.EnableRetryOnFailure)
-                    {
-                        sqlOptions.EnableRetryOnFailure(
-                            maxRetryCount: settings.MaxRetryCount,
-                            maxRetryDelay: TimeSpan.FromSeconds(settings.MaxRetryDelaySeconds),
-                            errorNumbersToAdd: null);
-                    }
-                });
+            options.UseSqlServer(settings.GameConnection);
         }, ServiceLifetime.Scoped);
     }
 

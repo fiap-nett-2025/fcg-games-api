@@ -21,6 +21,8 @@ public static class DependencyInjectionConfiguration
         services.AddScoped<IGameRecommendationService, RecommendationService>();
         services.AddScoped<IUserLibraryClient, UserLibraryClient>();
         services.AddScoped<IPromotionService, PromotionService>();
+        services.AddScoped<IMessageHandler<MessageDTO>, GameIncreasePopularityHandler>();
+
     }
 
     public static void ConfigureHttpClients(this IServiceCollection services, IConfigurationSection apiSection)

@@ -4,6 +4,7 @@ using FCG.Games.API.Configurations;
 using FCG.Games.Application;
 using FCG.Games.Application.Middlewares;
 using FCG.Games.Infra;
+using FCG.Games.Infra.Messaging.Config;
 using FCG.Games.Infra.Persistence.Config;
 using FCG.Games.Infra.Persistence.Data;
 using FCG.Games.Infra.Seedings;
@@ -91,6 +92,17 @@ internal class Program
 
         builder.Services.Configure<ElasticsearchOptions>(elasticsearchSection);
         builder.Services.ConfigureElasticsearch();
+        #endregion
+
+        #region Amazon SQS
+        var messagingSection = builder.Configuration.GetSection("Messaging");
+        if (!messagingSection.Exists())
+            throw new InvalidOperationException("Section 'Messaging' not found in configuration.");
+
+        var queuesSection = messagingSection.GetSection("Queues");
+        builder.Services.Configure<QueuesOptions>(queuesSection);
+
+        builder.Services.ConfigureAmazonSQS(builder.Configuration);
         #endregion
 
         builder.Services.ConfigureServices();

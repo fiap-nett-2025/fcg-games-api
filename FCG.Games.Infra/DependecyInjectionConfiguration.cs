@@ -10,6 +10,7 @@ using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using Amazon.SQS;
 using Microsoft.Extensions.Configuration;
+using FCG.Games.Infra.Messaging.Sqs;
 
 namespace FCG.Games.Infra;
 
@@ -74,6 +75,9 @@ public static class DependecyInjectionConfiguration
     {
         services.AddDefaultAWSOptions(configuration.GetAWSOptions());
         services.AddAWSService<IAmazonSQS>();
+
+        services.AddTransient<IQueueConsumer, AmazonSqsConsumer>();
+
         return services;
     }
 }

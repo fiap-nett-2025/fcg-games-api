@@ -11,6 +11,9 @@ namespace FCG.Games.API.Configurations
             var url = configuration["ElasticSearch:Url"];
             var apiKey = configuration["ElasticSearch:ApiKey"];
 
+            Console.WriteLine($"Elastic URL present? {!string.IsNullOrWhiteSpace(url)}");
+            Console.WriteLine($"Elastic ApiKey present? {!string.IsNullOrWhiteSpace(apiKey)} length={apiKey?.Length ?? 0}");
+
             ElasticsearchClientSettings settings;
             if(!string.IsNullOrEmpty(apiKey))
             {

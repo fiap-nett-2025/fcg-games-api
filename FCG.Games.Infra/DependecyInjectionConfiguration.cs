@@ -23,10 +23,11 @@ public static class DependecyInjectionConfiguration
             var settings = sp.GetRequiredService<IOptions<SqlServerOptions>>().Value;
 
             options.UseSqlServer(settings.GameConnection);
-        }, ServiceLifetime.Scoped);
+        }, ServiceLifetime.Scoped); 
+
     }
 
-    //RabbitMq
+    //RabbitMq not used
     public static void ConfigureRabbitMq(this IServiceCollection services)
     {
         services.AddSingleton(sp =>

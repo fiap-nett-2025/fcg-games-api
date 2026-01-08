@@ -58,18 +58,6 @@ public static class DependecyInjectionConfiguration
         });
     }
 
-    public static void ConfigureElasticsearch(this IServiceCollection services)
-    {
-        services.AddSingleton<ElasticsearchClient>(sp =>
-        {
-            var settings = sp.GetRequiredService<IOptions<ElasticsearchOptions>>().Value;
-            
-            var connectionSettings = new ElasticsearchClientSettings(new Uri(settings.Url))
-                .DefaultIndex(settings.IndexName);
-            return new ElasticsearchClient(connectionSettings);
-        });
-    }
-
     //Amazon SQS
     public static IServiceCollection ConfigureAmazonSQS(this IServiceCollection services, IConfiguration configuration)
     {

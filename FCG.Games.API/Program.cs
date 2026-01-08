@@ -86,12 +86,7 @@ internal class Program
         #endregion
 
         #region Elasticsearch
-        var elasticsearchSection = builder.Configuration.GetSection("ElasticSearch");
-        if (!elasticsearchSection.Exists())
-            throw new InvalidOperationException("Section 'ElasticSearch' not found in configuration.");
-
-        builder.Services.Configure<ElasticsearchOptions>(elasticsearchSection);
-        builder.Services.ConfigureElasticsearch();
+        builder.Services.AddElasticsearch(builder.Configuration);
         #endregion
 
         #region Amazon SQS

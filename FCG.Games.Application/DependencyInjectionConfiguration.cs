@@ -15,13 +15,13 @@ public static class DependencyInjectionConfiguration
 {
     public static void ConfigureServices(this IServiceCollection services)
     {
-        services.AddScoped<IGameService, GameService>();
-        services.AddScoped<IPromotionRepository, PromotionRepository>();
-        services.AddScoped<IGameRepository, ElasticsearchGameRepository>();
-        services.AddScoped<IGameRecommendationService, RecommendationService>();
-        services.AddScoped<IUserLibraryClient, UserLibraryClient>();
-        services.AddScoped<IPromotionService, PromotionService>();
-        services.AddScoped<IMessageHandler<MessageDTO>, GameIncreasePopularityHandler>();
+        services.AddTransient<IGameService, GameService>();
+        services.AddTransient<IPromotionRepository, PromotionRepository>();
+        services.AddTransient<IGameRepository, ElasticsearchGameRepository>();
+        services.AddTransient<IGameRecommendationService, RecommendationService>();
+        services.AddTransient<IUserLibraryClient, UserLibraryClient>();
+        services.AddTransient<IPromotionService, PromotionService>();
+        services.AddTransient<IMessageHandler<MessageDTO>, GameIncreasePopularityHandler>();
 
     }
 

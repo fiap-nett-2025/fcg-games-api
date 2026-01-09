@@ -57,7 +57,9 @@ jobs:
     # Build & Push da API
     - name: Build and push API image
       run: |
-        docker build -t ${{env.FCG_API_NAME}} -f ${{env.FCG_API_DOCKERFILE}} .
+        docker build --build-arg AWS_REGION=${{ vars.AWS_REGION }} \
+        --build-arg AWS_ACCOUNT_ID=${{ vars.AWS_ACCOUNT_ID }} \
+        -t ${{env.FCG_API_NAME}} -f ${{env.FCG_API_DOCKERFILE}} .
         docker tag ${{env.FCG_API_NAME}}:latest ${{ vars.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com/${{env.FCG_API_NAME}}:latest
         docker push ${{ vars.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com/${{env.FCG_API_NAME}}:latest
 
